@@ -7,10 +7,19 @@
 .vscode/
 .idea/
 
-# Node (만일을 대비)
+# Node
 node_modules/
-
-# 환경 변수 (만일을 대비)
-.env
-.env.local
 *.log
+
+# Next.js
+.next/
+out/
+build/
+next-env.d.ts
+
+# TypeScript incremental build cache
+tsconfig.tsbuildinfo
+
+# 환경 변수
+.env
+.env*.local

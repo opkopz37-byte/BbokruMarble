@@ -1,0 +1,111 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --primary-yellow: #FFD700;
+  --pale-yellow: #FFFEF5;
+  --light-gray: #F8F8F0;
+  --white: #FFFFFF;
+  --black: #000000;
+  --pink: #FFB8D9;
+  --gray-900: #0a0a0a;
+  --gray-700: #2a2a2a;
+  --gray-500: #555555;
+  --gray-400: #777777;
+  --shadow: 6px 6px 0px #000000;
+  --font-display: var(--font-jua), 'Jua', sans-serif;
+  --font-body: var(--font-noto), 'Noto Sans KR', sans-serif;
+}
+
+html,
+body {
+  font-family: var(--font-body);
+  letter-spacing: -0.02em;
+  background: var(--pale-yellow);
+  min-height: 100vh;
+  color: var(--gray-900);
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font-family: inherit;
+  letter-spacing: -0.02em;
+  cursor: pointer;
+}
+
+main {
+  min-height: calc(100vh - 200px);
+}
+
+::selection {
+  background: var(--primary-yellow);
+  color: var(--black);
+}
+
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--pale-yellow);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--black);
+  border: 2px solid var(--pale-yellow);
+  border-radius: 100px;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 5px 5px 0px var(--black);
+  }
+  50% {
+    transform: scale(1.02);
+    box-shadow: 6px 6px 0px var(--black);
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-12px) rotate(3deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

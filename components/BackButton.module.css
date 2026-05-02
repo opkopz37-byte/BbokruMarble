@@ -1,0 +1,29 @@
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 900;
+  font-size: 0.85rem;
+  letter-spacing: 0.06em;
+  color: var(--black);
+  padding: 8px 16px;
+  border: 2px solid var(--black);
+  background: var(--white);
+  border-radius: 100px;
+  box-shadow: 3px 3px 0 var(--black);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.btn:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 5px 5px 0 var(--black);
+}
+
+.btn:hover .arrow {
+  transform: translateX(-3px);
+}
+
+.arrow {
+  display: inline-block;
+  transition: transform 0.2s ease;
+}

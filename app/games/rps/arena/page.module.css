@@ -1,0 +1,573 @@
+.page {
+  width: 100%;
+  min-height: calc(100vh - 70px);
+  padding: 20px 16px 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  background:
+    radial-gradient(ellipse at 50% 30%, rgba(255, 215, 0, 0.18), transparent 60%),
+    radial-gradient(ellipse at 50% 90%, rgba(255, 184, 217, 0.12), transparent 60%),
+    var(--pale-yellow);
+  position: relative;
+}
+
+/* ==================== TOP BAR ==================== */
+.topBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 1100px;
+  margin: 0 auto;
+  width: 100%;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.topInfo {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.roundBadge,
+.statusBadge,
+.aliveBadge {
+  display: inline-block;
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  letter-spacing: 0.04em;
+  padding: 6px 12px;
+  border: 2px solid var(--black);
+  border-radius: 100px;
+  box-shadow: 2px 2px 0 var(--black);
+}
+
+.roundBadge {
+  background: var(--black);
+  color: var(--primary-yellow);
+}
+
+.statusBadge {
+  background: var(--white);
+}
+
+.aliveBadge {
+  background: var(--primary-yellow);
+}
+
+/* ==================== HOST SEAT ==================== */
+.hostSeat {
+  display: flex;
+  justify-content: center;
+  padding: 10px 0;
+}
+
+/* ==================== CENTER STAGE ==================== */
+.center {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 110px;
+  padding: 16px 0;
+}
+
+.loader {
+  font-weight: 900;
+  font-size: 1.05rem;
+  color: var(--gray-500);
+}
+
+.stageMessage {
+  text-align: center;
+}
+
+.stageHint {
+  font-family: var(--font-display);
+  font-size: clamp(1.1rem, 2.6vw, 1.6rem);
+  letter-spacing: -0.01em;
+  color: var(--gray-700);
+  line-height: 1.4;
+  max-width: 32ch;
+  margin: 0 auto;
+}
+
+/* COUNTDOWN */
+.countdownStage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.countdownLabel {
+  font-weight: 900;
+  font-size: 0.85rem;
+  letter-spacing: 0.16em;
+  color: var(--gray-500);
+}
+
+.countdownNumber {
+  font-family: var(--font-display);
+  font-size: clamp(5rem, 16vw, 9rem);
+  line-height: 1;
+  letter-spacing: -0.04em;
+  color: var(--black);
+  background: var(--primary-yellow);
+  border: 4px solid var(--black);
+  border-radius: 24px;
+  padding: 18px 44px;
+  box-shadow: 8px 8px 0 var(--black);
+}
+
+/* RESULT BANNER */
+.resultBanner {
+  display: flex;
+  justify-content: center;
+}
+
+.resultBadge,
+.resultBadgePink {
+  display: inline-block;
+  font-family: var(--font-display);
+  font-size: clamp(1rem, 2.4vw, 1.4rem);
+  padding: 10px 22px;
+  border: 3px solid var(--black);
+  border-radius: 100px;
+  box-shadow: 4px 4px 0 var(--black);
+}
+
+.resultBadge {
+  background: var(--primary-yellow);
+}
+
+.resultBadgePink {
+  background: var(--pink);
+}
+
+/* WINNER STAGE */
+.winnerStage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+  background: var(--black);
+  color: var(--pale-yellow);
+  border: 4px solid var(--black);
+  border-radius: 28px;
+  padding: 36px 30px;
+  box-shadow: 10px 10px 0 var(--primary-yellow), 10px 10px 0 2px var(--black);
+  max-width: 520px;
+  width: 92%;
+}
+
+.winnerCrown {
+  font-size: clamp(3.5rem, 10vw, 5.5rem);
+  line-height: 1;
+  filter: drop-shadow(3px 3px 0 var(--primary-yellow));
+}
+
+.winnerLabel {
+  font-weight: 900;
+  font-size: 0.85rem;
+  letter-spacing: 0.22em;
+  color: var(--primary-yellow);
+}
+
+.winnerName {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 6.5vw, 3.4rem);
+  letter-spacing: -0.02em;
+  line-height: 1;
+  color: var(--primary-yellow);
+}
+
+.winnerSub {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #ddd;
+  margin-top: 8px;
+}
+
+/* ==================== PLAYERS ROW ==================== */
+.playersRow {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 12px 0;
+  max-width: 1100px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* ==================== PLAYER SEAT (SHARED) ==================== */
+.seat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 10px;
+  background: var(--white);
+  border: 2.5px solid var(--black);
+  border-radius: 18px;
+  box-shadow: 4px 4px 0 var(--black);
+  min-width: 110px;
+  max-width: 140px;
+  position: relative;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.seatBig {
+  padding: 18px 20px;
+  min-width: 200px;
+  border-width: 3px;
+  border-radius: 24px;
+  box-shadow: 6px 6px 0 var(--black);
+}
+
+.seatMe {
+  background: var(--pale-yellow);
+}
+
+.seatHost {
+  background: var(--black);
+  color: var(--pale-yellow);
+  border-color: var(--black);
+  box-shadow: 6px 6px 0 var(--primary-yellow), 6px 6px 0 2px var(--black);
+}
+
+.seatKO {
+  opacity: 0.5;
+  background: #efe9d6;
+}
+
+.seatJustKO {
+  border-color: var(--pink);
+  box-shadow: 4px 4px 0 var(--pink);
+  animation: shakeKO 0.4s ease;
+}
+
+@keyframes shakeKO {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+
+.seatJustSurvive {
+  border-color: #2cb673;
+  box-shadow: 4px 4px 0 #2cb673;
+}
+
+.seatWinner {
+  background: var(--primary-yellow);
+  border-color: var(--black);
+  animation: winnerGlow 1.2s ease-in-out infinite;
+}
+
+@keyframes winnerGlow {
+  0%, 100% {
+    box-shadow: 4px 4px 0 var(--black);
+    transform: translateY(0);
+  }
+  50% {
+    box-shadow: 6px 6px 0 var(--black);
+    transform: translateY(-3px);
+  }
+}
+
+.seatHead {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  justify-content: center;
+}
+
+.seatBig .seatHead {
+  font-size: 1.05rem;
+}
+
+.seatBadge {
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.seatBig .seatBadge {
+  font-size: 1.4rem;
+}
+
+.seatName {
+  font-family: var(--font-display);
+  font-size: 0.92rem;
+  letter-spacing: 0;
+  text-align: center;
+  word-break: break-all;
+  line-height: 1.2;
+}
+
+.seatBig .seatName {
+  font-size: 1.2rem;
+}
+
+.meDot {
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 0.8em;
+  opacity: 0.7;
+}
+
+.seatCardSlot {
+  width: 60px;
+  height: 84px;
+  perspective: 800px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.seatBig .seatCardSlot {
+  width: 92px;
+  height: 130px;
+}
+
+.flipWrap {
+  width: 100%;
+  height: 100%;
+  perspective: 800px;
+}
+
+.flipInner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+}
+
+.miniCard {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  border: 2.5px solid var(--black);
+  box-shadow: 3px 3px 0 var(--black);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.miniCardFront {
+  background: var(--white);
+}
+
+.miniCardBack {
+  background: var(--primary-yellow);
+  background-image:
+    repeating-linear-gradient(45deg, transparent, transparent 6px, rgba(0,0,0,0.08) 6px, rgba(0,0,0,0.08) 8px);
+  transform: rotateY(180deg);
+}
+
+.miniCardEmpty {
+  position: relative;
+  background: transparent;
+  border-style: dashed;
+  border-color: var(--gray-400);
+  box-shadow: none;
+  width: 100%;
+  height: 100%;
+}
+
+.miniCardSlash {
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  color: var(--gray-400);
+}
+
+.miniCardEmoji {
+  font-size: 1.8rem;
+  line-height: 1;
+}
+
+.seatBig .miniCardEmoji {
+  font-size: 3rem;
+}
+
+.miniCardBackMark {
+  font-family: var(--font-display);
+  font-size: 1.8rem;
+  color: var(--black);
+}
+
+.seatBig .miniCardBackMark {
+  font-size: 2.6rem;
+}
+
+.seatStatus {
+  font-weight: 900;
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  color: inherit;
+  opacity: 0.85;
+}
+
+.seatBig .seatStatus {
+  font-size: 0.78rem;
+}
+
+/* ==================== MY HAND ==================== */
+.myHand {
+  margin-top: auto;
+  padding: 24px 16px 12px;
+  border-top: 2px dashed var(--black);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  background: rgba(255, 254, 245, 0.6);
+  border-radius: 28px 28px 0 0;
+}
+
+.myHandLabel {
+  font-weight: 900;
+  font-size: 0.78rem;
+  letter-spacing: 0.18em;
+  color: var(--gray-500);
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  width: 100%;
+  max-width: 540px;
+}
+
+.handCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 22px 8px 18px;
+  background: var(--white);
+  border: 3px solid var(--black);
+  border-radius: 22px;
+  box-shadow: 5px 5px 0 var(--black);
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease, opacity 0.25s ease;
+  aspect-ratio: 0.78;
+  min-height: 130px;
+  position: relative;
+}
+
+.handCardSelected {
+  background: var(--primary-yellow);
+  box-shadow: 7px 7px 0 var(--black);
+  transform: translate(-2px, -2px);
+}
+
+.handCardDim {
+  opacity: 0.35;
+}
+
+.handCard:disabled {
+  cursor: default;
+}
+
+.handCardEmoji {
+  font-size: clamp(2.8rem, 8vw, 4rem);
+  line-height: 1;
+  filter: drop-shadow(2px 2px 0 rgba(0, 0, 0, 0.15));
+}
+
+.handCardLabel {
+  font-family: var(--font-display);
+  font-size: clamp(1rem, 2.4vw, 1.4rem);
+  letter-spacing: 0;
+}
+
+/* ==================== HOST CONTROLS ==================== */
+.controls {
+  position: sticky;
+  bottom: 16px;
+  display: flex;
+  justify-content: center;
+  z-index: 80;
+  margin-top: 8px;
+}
+
+.primaryBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--black);
+  color: var(--primary-yellow);
+  padding: 16px 34px;
+  border: 3px solid var(--black);
+  border-radius: 100px;
+  font-weight: 900;
+  font-size: 0.95rem;
+  letter-spacing: 0.06em;
+  box-shadow: 5px 5px 0 var(--primary-yellow), 5px 5px 0 2px var(--black);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.primaryBtn:hover:not(:disabled) {
+  transform: translate(-2px, -2px);
+  box-shadow: 7px 7px 0 var(--primary-yellow), 7px 7px 0 2px var(--black);
+}
+
+.primaryBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: var(--gray-700);
+  box-shadow: 5px 5px 0 var(--gray-400), 5px 5px 0 2px var(--gray-700);
+}
+
+/* ==================== RESPONSIVE ==================== */
+@media (max-width: 600px) {
+  .page {
+    padding: 14px 12px 24px;
+    gap: 14px;
+  }
+  .seat {
+    min-width: 95px;
+    max-width: 110px;
+    padding: 10px 6px;
+  }
+  .seatCardSlot {
+    width: 52px;
+    height: 72px;
+  }
+  .miniCardEmoji {
+    font-size: 1.5rem;
+  }
+  .miniCardBackMark {
+    font-size: 1.5rem;
+  }
+  .handCard {
+    min-height: 110px;
+    padding: 18px 6px 14px;
+    border-radius: 18px;
+  }
+  .countdownNumber {
+    padding: 14px 32px;
+    border-radius: 18px;
+  }
+  .winnerStage {
+    padding: 28px 22px;
+    border-radius: 22px;
+  }
+  .primaryBtn {
+    padding: 14px 28px;
+    font-size: 0.9rem;
+  }
+}
