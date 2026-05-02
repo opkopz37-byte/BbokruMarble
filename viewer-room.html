@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>유저방 - 뽁루마블</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Jua&family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
+    
+    <!-- 🔥 Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+    <script src="firebase-config.js"></script>
+    
+    <link rel="stylesheet" href="viewer-room.css">
+</head>
+<body>
+    <!-- 패널 토글 버튼들 -->
+    <div class="panel-toggle-btn toggle-left" onclick="toggleLeftPanel()">
+        <span id="leftToggleIcon">◀</span>
+    </div>
+    <div class="panel-toggle-btn toggle-right" onclick="toggleRightPanel()">
+        <span id="rightToggleIcon">▶</span>
+    </div>
+
+    <!-- 게임 레이아웃 -->
+    <div class="game-layout" id="gameLayout">
+        <!-- 왼쪽 정보 패널 -->
+        <div class="left-panel">
+            <div class="panel-title">📋 게임 정보</div>
+            
+            <!-- 연결 상태 -->
+            <div class="info-card">
+                <div class="info-title">🔗 연결 상태</div>
+                <div class="status-indicator">
+                    <div class="status-dot connected" id="statusDot"></div>
+                    <span id="statusText">실시간 연결 중...</span>
+                </div>
+            </div>
+
+            <!-- 말 목록 -->
+            <div class="info-card">
+                <div class="info-title">🎯 말 목록</div>
+                <div class="piece-list" id="pieceListInfo"></div>
+            </div>
+        </div>
+
+        <!-- 중앙 보드 영역 -->
+        <div class="center-area">
+            <div class="board-container" id="gameBoard">
+                <div class="board-placeholder" id="boardPlaceholder">
+                    🎲 게임 보드
+                </div>
+            </div>
+        </div>
+
+        <!-- 오른쪽 주사위 정보 패널 -->
+        <div class="right-panel">
+            <div class="dice-card">
+                <div class="dice-card-title">🎲 주사위</div>
+                
+                <!-- 3D 주사위 -->
+                <div class="dice-3d-container">
+                    <div class="dice-3d dice-theme-dawn" id="dice3d">
+                        <div class="dice-face dice-face-1">1</div>
+                        <div class="dice-face dice-face-2">2</div>
+                        <div class="dice-face dice-face-3">3</div>
+                        <div class="dice-face dice-face-4">4</div>
+                        <div class="dice-face dice-face-5">5</div>
+                        <div class="dice-face dice-face-6">6</div>
+                    </div>
+                </div>
+
+                <!-- 주사위 결과 -->
+                <div class="dice-result" id="diceResult"></div>
+
+                <!-- 주사위 정보 -->
+                <div class="dice-info-row">
+                    <span class="dice-info-label">테마</span>
+                    <span class="dice-info-value" id="diceThemeDisplay">새벽 주사위 💗</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="viewer-room.js" defer></script>
+</body>
+</html>

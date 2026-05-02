@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>뽀그방 - 뽁루마블</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Jua&family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
+    
+    <!-- 🔥 Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+    <script src="firebase-config.js"></script>
+    
+    <link rel="stylesheet" href="host-room.css">
+</head>
+<body>
+    <!-- 비밀번호 화면 -->
+    <div class="password-screen" id="passwordScreen">
+        <div class="password-box">
+            <h2>🎮 뽀그방 입장</h2>
+            <input 
+                type="password" 
+                class="password-input" 
+                id="passwordInput" 
+                placeholder="비밀번호 입력"
+                maxlength="20"
+            >
+            <button class="password-btn" onclick="checkPassword()">입장하기</button>
+            <div class="password-error" id="passwordError">
+                ❌ 비밀번호가 틀렸습니다
+            </div>
+        </div>
+    </div>
+
+    <!-- 게임 화면 -->
+    <div class="game-screen" id="gameScreen">
+        <!-- 패널 토글 버튼들 -->
+        <div class="panel-toggle-btn toggle-left" onclick="toggleLeftPanel()">
+            <span id="leftToggleIcon">◀</span>
+        </div>
+        <div class="panel-toggle-btn toggle-right" onclick="toggleRightPanel()">
+            <span id="rightToggleIcon">▶</span>
+        </div>
+
+        <div class="game-layout" id="gameLayout">
+            <!-- 왼쪽 컨트롤 패널 -->
+            <div class="left-panel">
+                <div class="panel-title">🎮 게임 컨트롤</div>
+                
+                <!-- 말 갯수 설정 -->
+                <div class="control-card">
+                    <div class="control-card-title">🏁 말 갯수</div>
+                    <div class="piece-counter">
+                        <button class="counter-btn" onclick="adjustPieceCount(-1)">-</button>
+                        <div class="counter-display" id="pieceCountDisplay">4</div>
+                        <button class="counter-btn" onclick="adjustPieceCount(1)">+</button>
+                    </div>
+                </div>
+
+                <!-- 말 이름 설정 -->
+                <div class="control-card">
+                    <div class="control-card-title">📝 말 이름 설정</div>
+                    <div class="name-list" id="nameList"></div>
+                </div>
+
+                <!-- 아이콘 관리 -->
+                <div class="control-card">
+                    <div class="control-card-title">🎨 아이콘 관리</div>
+                    <div class="icon-list" id="iconManagementList"></div>
+                </div>
+
+                <!-- 솔드아웃 갯수 -->
+                <div class="control-card">
+                    <div class="control-card-title">🚫 솔드아웃 갯수</div>
+                    <div class="piece-counter">
+                        <button class="counter-btn" onclick="changeSoldoutCount(-1)">-</button>
+                        <div class="counter-display" id="soldoutCountDisplay">5</div>
+                        <button class="counter-btn" onclick="changeSoldoutCount(1)">+</button>
+                    </div>
+                </div>
+
+                <!-- 솔드아웃 아이콘 관리 -->
+                <div class="control-card">
+                    <div class="control-card-title">🖼️ 솔드아웃 이미지</div>
+                    <div class="icon-list" id="soldoutIconList"></div>
+                </div>
+
+                <!-- 💾 저장 버튼 -->
+                <div class="control-card">
+                    <button class="save-btn" onclick="saveGameState()">
+                        💾 현재 상태 저장하기
+                    </button>
+                    <div class="save-status" id="saveStatus"></div>
+                </div>
+
+                <!-- 리셋 버튼 -->
+                <div class="control-card">
+                    <button class="reset-btn" onclick="resetAllPieces()">
+                        🗑️ 보드 위 모든 말/솔드아웃 제거
+                    </button>
+                </div>
+            </div>
+
+            <!-- 중앙 보드 영역 -->
+            <div class="center-area">
+                <div class="board-container" id="gameBoard">
+                    <div class="board-placeholder" id="boardPlaceholder">
+                        🎲 게임 보드
+                    </div>
+                    
+                    <!-- 햄버거 메뉴 버튼 -->
+                    <div class="hamburger-btn" onclick="openBoardImageModal()">
+                        <div class="hamburger-line"></div>
+                        <div class="hamburger-line"></div>
+                        <div class="hamburger-line"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 오른쪽 주사위 & 말 팔레트 -->
+            <div class="right-panel">
+                <div class="panel-title">🎲 주사위 & 말</div>
+                
+                <!-- 주사위 섹션 -->
+                <div class="dice-section">
+                    <div class="dice-theme-selector">
+                        <select id="diceTypeSelect" onchange="changeDiceTheme()">
+                            <option value="dawn">새벽 주사위 💗</option>
+                            <option value="acting">연기 주사위 💜</option>
+                            <option value="calm">차분 주사위 💙</option>
+                            <option value="excite">촐싹 주사위 🧡</option>
+                        </select>
+                    </div>
+                    
+                    <div class="dice-container">
+                        <div class="dice-3d dice-theme-dawn" id="dice3d">
+                            <div class="dice-face dice-face-front">1</div>
+                            <div class="dice-face dice-face-right">2</div>
+                            <div class="dice-face dice-face-back">3</div>
+                            <div class="dice-face dice-face-left">4</div>
+                            <div class="dice-face dice-face-top">5</div>
+                            <div class="dice-face dice-face-bottom">6</div>
+                        </div>
+                        
+                        <button class="roll-dice-btn btn-theme-dawn" id="rollDiceBtn" onclick="rollDice()">
+                            🎲 주사위 굴리기
+                        </button>
+                        
+                        <div class="dice-result" id="diceResultText"></div>
+                    </div>
+                </div>
+
+                <!-- 말 팔레트 -->
+                <div class="pieces-palette">
+                    <div class="palette-title">🎯 말 목록</div>
+                    <div id="piecesPalette"></div>
+                </div>
+
+                <!-- 솔드아웃 팔레트 -->
+                <div class="soldout-palette">
+                    <div class="palette-title">🚫 솔드아웃</div>
+                    <div id="soldoutPalette"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 보드 이미지 변경 모달 -->
+    <div class="board-image-modal" id="boardImageModal">
+        <div class="modal-content">
+            <div class="modal-title">🖼️ 보드 이미지</div>
+            <input type="file" id="boardImageInput" accept="image/*" style="display: none;">
+            <button class="modal-btn modal-btn-upload" onclick="document.getElementById('boardImageInput').click()">
+                📁 이미지 업로드
+            </button>
+            <button class="modal-btn modal-btn-remove" onclick="removeBoardImage()">
+                🗑️ 이미지 제거
+            </button>
+            <button class="modal-btn modal-btn-cancel" onclick="closeBoardImageModal()">
+                ❌ 취소
+            </button>
+        </div>
+    </div>
+
+    <!-- 제거 확인 모달 -->
+    <div class="remove-modal" id="removeModal">
+        <div class="modal-content">
+            <div class="modal-title">정말 제거하시겠습니까?</div>
+            <button class="modal-btn modal-btn-remove" onclick="confirmRemove()">제거</button>
+            <button class="modal-btn modal-btn-cancel" onclick="cancelRemove()">취소</button>
+        </div>
+    </div>
+
+    <script src="host-room.js" defer></script>
+</body>
+</html>

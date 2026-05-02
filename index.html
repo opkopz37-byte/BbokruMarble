@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>뽁루마블 - 주사위 보드게임</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Jua&family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-yellow: #FFD700;
+            --pale-yellow: #FFFEF5;
+            --light-gray: #F8F8F0;
+            --white: #FFFFFF;
+            --black: #000000;
+            --pink: #FFB8D9;
+            --shadow: 6px 6px 0px #000000;
+        }
+
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            letter-spacing: -0.03em;
+            background: var(--pale-yellow);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 60px;
+            animation: fadeInDown 0.8s ease;
+        }
+
+        .header h1 {
+            font-family: 'Jua', sans-serif;
+            font-size: clamp(3rem, 8vw, 6rem);
+            color: var(--black);
+            margin-bottom: 20px;
+            letter-spacing: 0;
+        }
+
+        .cards-container {
+            display: grid;
+            gap: 40px;
+            margin-bottom: 60px;
+        }
+
+        /* 배너 카드 공통 스타일 */
+        .banner-card {
+            border: 5px solid var(--black);
+            box-shadow: var(--shadow);
+            padding: 40px;
+            position: relative;
+            animation: fadeInUp 0.8s ease;
+            border-radius: 30px;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        
+        .banner-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 8px 8px 0px #000000;
+        }
+
+        /* 이미지 배경 카드 */
+        .image-card {
+            background: linear-gradient(rgba(255, 215, 0, 0.2), rgba(255, 199, 0, 0.2)),
+                        url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23FFD700" width="50" height="50" opacity="0.1"/><rect fill="%23FFC700" x="50" width="50" height="50" opacity="0.1"/><rect fill="%23FFC700" y="50" width="50" height="50" opacity="0.1"/><rect fill="%23FFD700" x="50" y="50" width="50" height="50" opacity="0.1"/></svg>'),
+                        var(--pale-yellow);
+            background-size: 40px 40px;
+            animation-delay: 0.1s;
+        }
+
+        /* 화이트 배경 카드 */
+        .white-card {
+            background: var(--light-gray);
+            animation-delay: 0.3s;
+        }
+
+        /* 옅은 노랑-그레이 배경 카드 */
+        .pale-card {
+            background: var(--pale-yellow);
+            animation-delay: 0.5s;
+        }
+
+        .badge {
+            display: inline-block;
+            background: var(--primary-yellow);
+            color: var(--black);
+            padding: 8px 20px;
+            border: 3px solid var(--black);
+            font-weight: 900;
+            font-size: 0.9rem;
+            letter-spacing: 0;
+            margin-bottom: 20px;
+            transform: rotate(-2deg);
+            box-shadow: 3px 3px 0px #000000;
+            border-radius: 20px;
+            animation: badgeShine 3s ease-in-out infinite;
+        }
+
+        .card-title {
+            font-family: 'Jua', sans-serif;
+            font-size: clamp(2rem, 5vw, 3rem);
+            color: var(--black);
+            margin-bottom: 20px;
+            line-height: 1.2;
+            letter-spacing: 0;
+        }
+
+        .card-text {
+            font-size: clamp(1rem, 2vw, 1.2rem);
+            color: var(--black);
+            line-height: 1.8;
+            margin-bottom: 30px;
+            font-weight: 400;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 30px;
+        }
+
+        .btn {
+            padding: 15px 30px;
+            border: 4px solid var(--black);
+            font-weight: 900;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: inline-block;
+            font-family: 'Noto Sans KR', sans-serif;
+            letter-spacing: -0.03em;
+            border-radius: 20px;
+        }
+
+        .btn-cta {
+            background: var(--primary-yellow);
+            color: var(--black);
+            box-shadow: 5px 5px 0px #000000;
+            animation: pulse 2s infinite;
+        }
+
+        .btn-cta:hover {
+            background: #FFC700;
+            transform: translate(-2px, -2px) scale(1.05);
+            box-shadow: 7px 7px 0px #000000;
+            animation: none;
+        }
+
+        .btn-sub {
+            background: var(--white);
+            color: var(--black);
+            box-shadow: 5px 5px 0px #000000;
+        }
+
+        .btn-sub:hover {
+            background: var(--light-gray);
+            transform: translate(-2px, -2px) scale(1.05);
+            box-shadow: 7px 7px 0px #000000;
+        }
+
+        .game-rules {
+            background: rgba(255, 255, 255, 0.5);
+            border: 3px solid var(--black);
+            padding: 25px;
+            margin-top: 20px;
+            border-radius: 25px;
+        }
+
+        .game-rules h3 {
+            font-family: 'Jua', sans-serif;
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            color: var(--black);
+            letter-spacing: 0;
+        }
+
+        .game-rules ol {
+            padding-left: 25px;
+            line-height: 2;
+        }
+
+        .game-rules li {
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        /* 모달 */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            animation: fadeIn 0.3s ease;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background-color: var(--pale-yellow);
+            margin: 5% auto;
+            padding: 0;
+            border: 5px solid var(--black);
+            border-radius: 30px;
+            width: 90%;
+            max-width: 700px;
+            box-shadow: 10px 10px 0px #000000;
+            animation: slideDown 0.3s ease;
+        }
+
+        .modal-header {
+            background: var(--primary-yellow);
+            border-bottom: 5px solid var(--black);
+            padding: 30px;
+            border-radius: 25px 25px 0 0;
+        }
+
+        .modal-title {
+            font-family: 'Jua', sans-serif;
+            font-size: 2.5rem;
+            color: var(--black);
+            letter-spacing: 0;
+            text-align: center;
+            margin: 0;
+        }
+
+        .modal-body {
+            padding: 30px;
+        }
+
+        .info-cards-grid {
+            display: grid;
+            gap: 15px;
+        }
+
+        .info-mini-card {
+            background: white;
+            border: 3px solid var(--black);
+            border-radius: 20px;
+            padding: 20px;
+            transition: all 0.2s;
+        }
+
+        .info-mini-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 5px 5px 0px #000000;
+        }
+
+        .info-mini-card-icon {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .info-mini-card-title {
+            font-weight: 900;
+            font-size: 1.2rem;
+            margin-bottom: 8px;
+            color: var(--black);
+        }
+
+        .info-mini-card-text {
+            font-size: 0.95rem;
+            line-height: 1.6;
+            color: #555;
+        }
+
+        .modal-description {
+            background: rgba(255, 255, 255, 0.5);
+            border: 3px solid var(--black);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 20px;
+            font-size: 1.1rem;
+            line-height: 1.8;
+        }
+
+        .modal-footer {
+            padding: 0 30px 30px 30px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .modal-close {
+            background: var(--primary-yellow);
+            border: 4px solid var(--black);
+            padding: 15px 50px;
+            font-size: 1.2rem;
+            font-weight: 900;
+            cursor: pointer;
+            border-radius: 20px;
+            box-shadow: 4px 4px 0px #000000;
+            transition: all 0.2s;
+            font-family: 'Noto Sans KR', sans-serif;
+            letter-spacing: -0.03em;
+        }
+
+        .modal-close:hover {
+            transform: translate(-2px, -2px) scale(1.05);
+            box-shadow: 6px 6px 0px #000000;
+        }
+
+        .faq-item {
+            background: white;
+            border: 3px solid var(--black);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 15px;
+        }
+
+        .faq-question {
+            font-weight: 900;
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+            color: #FF69B4;
+        }
+
+        .faq-answer {
+            font-size: 1rem;
+            line-height: 1.6;
+            color: #555;
+        }
+
+        .tutorial-step {
+            background: white;
+            border: 3px solid var(--black);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .step-number {
+            width: 50px;
+            height: 50px;
+            background: var(--primary-yellow);
+            border: 3px solid var(--black);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        .step-text {
+            flex: 1;
+            font-size: 1.05rem;
+            line-height: 1.6;
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideDown {
+            from {
+                transform: translateY(-100px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+                box-shadow: 5px 5px 0px #000000;
+            }
+            50% {
+                transform: scale(1.02);
+                box-shadow: 6px 6px 0px #000000;
+            }
+        }
+        
+        @keyframes badgeShine {
+            0%, 100% {
+                transform: rotate(-2deg) scale(1);
+                box-shadow: 3px 3px 0px #000000;
+            }
+            50% {
+                transform: rotate(-2deg) scale(1.05);
+                box-shadow: 4px 4px 0px #000000;
+            }
+        }
+
+        /* 반응형 */
+        @media (max-width: 768px) {
+            body {
+                padding: 20px 15px;
+            }
+
+            .banner-card {
+                padding: 30px 20px;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+                text-align: center;
+            }
+
+            .modal-content {
+                padding: 30px 20px;
+                margin: 30% auto;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .banner-card {
+                border-width: 4px;
+                box-shadow: 4px 4px 0px #000000;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>뽁루마블</h1>
+        </header>
+
+        <div class="cards-container">
+            <!-- 이미지 배경 카드 -->
+            <div class="banner-card image-card">
+                <span class="badge">HOT</span>
+                <h2 class="card-title">뽀그방에서<br>게임을 시작하세요!</h2>
+                <p class="card-text">
+                    호스트가 되어 게임을 주최하고, 친구들을 초대해보세요. 
+                    주사위를 굴리고, 말을 움직이며 즐거운 시간을 보낼 수 있어요!
+                </p>
+                <div class="button-group">
+                    <a href="host-room.html" class="btn btn-cta">뽀그방 입장하기</a>
+                    <button class="btn btn-sub" onclick="openModal('host')">더 알아보기</button>
+                </div>
+                <div class="game-rules">
+                    <h3>뽀그방 특징</h3>
+                    <ol>
+                        <li>비밀번호로 안전하게 방 보호</li>
+                        <li>최대 30개까지 말 생성 가능</li>
+                        <li>커스텀 말 이미지 업로드</li>
+                        <li>실시간 주사위 굴리기</li>
+                        <li>모든 조작 권한 제공</li>
+                    </ol>
+                </div>
+            </div>
+
+            <!-- 화이트 배경 카드 -->
+            <div class="banner-card white-card">
+                <span class="badge">VIEW</span>
+                <h2 class="card-title">유저방에서<br>게임을 관람하세요!</h2>
+                <p class="card-text">
+                    진행 중인 게임을 실시간으로 관람할 수 있어요. 
+                    뽀그방에서 일어나는 모든 일들을 생생하게 볼 수 있답니다!
+                </p>
+                <div class="button-group">
+                    <a href="viewer-room.html" class="btn btn-cta">유저방 입장하기</a>
+                    <button class="btn btn-sub" onclick="openModal('viewer')">더 알아보기</button>
+                </div>
+                <div class="game-rules">
+                    <h3>유저방 특징</h3>
+                    <ol>
+                        <li>실시간 게임 진행 상황 확인</li>
+                        <li>뽀그방과 동일한 화면 구성</li>
+                        <li>말 정보 실시간 표시</li>
+                        <li>조작 없이 관람만 가능</li>
+                        <li>모바일에서도 편하게 시청</li>
+                    </ol>
+                </div>
+            </div>
+
+            <!-- 옅은 노랑-그레이 배경 카드 -->
+            <div class="banner-card pale-card">
+                <span class="badge">GUIDE</span>
+                <h2 class="card-title">게임 방법을<br>확인해보세요!</h2>
+                <p class="card-text">
+                    처음이신가요? 걱정하지 마세요! 
+                    간단한 규칙으로 누구나 쉽게 즐길 수 있는 게임이에요.
+                </p>
+                <div class="button-group">
+                    <button class="btn btn-cta" onclick="openModal('tutorial')">튜토리얼 시작</button>
+                    <button class="btn btn-sub" onclick="openModal('faq')">자주 묻는 질문</button>
+                </div>
+                <div class="game-rules">
+                    <h3>기본 게임 규칙</h3>
+                    <ol>
+                        <li>주사위를 굴려서 나온 숫자만큼 이동</li>
+                        <li>각 플레이어는 자신의 말을 선택</li>
+                        <li>목표 지점에 먼저 도착하면 승리</li>
+                        <li>특수 칸에서는 보너스 효과</li>
+                        <li>친구들과 재미있게 경쟁하세요!</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 모달 -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="modalTitle">제목</h2>
+            </div>
+            <div class="modal-body" id="modalBody">내용</div>
+            <div class="modal-footer">
+                <button class="modal-close" onclick="closeModal()">닫기</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const modalContents = {
+            host: {
+                title: '뽀그방 상세 정보',
+                body: `
+                    <div class="modal-description">
+                        <p>뽀그방은 게임의 호스트가 되어 모든 것을 컨트롤할 수 있는 방입니다.</p>
+                        <p>친구들을 초대해서 함께 즐거운 시간을 보내세요!</p>
+                    </div>
+                    <div class="info-cards-grid">
+                        <div class="info-mini-card">
+                            <div class="info-mini-card-icon">🔐</div>
+                            <div class="info-mini-card-title">비밀번호 보호</div>
+                            <div class="info-mini-card-text">안전한 비밀번호로 방을 보호하세요. 초대받은 사람만 입장할 수 있어요!</div>
+                        </div>
+                        <div class="info-mini-card">
+                            <div class="info-mini-card-icon">🎮</div>
+                            <div class="info-mini-card-title">말 커스터마이징</div>
+                            <div class="info-mini-card-text">최대 30개까지 말을 생성하고, 원하는 이미지로 꾸며보세요!</div>
+                        </div>
+                        <div class="info-mini-card">
+                            <div class="info-mini-card-icon">🎲</div>
+                            <div class="info-mini-card-title">다양한 주사위</div>
+                            <div class="info-mini-card-text">4가지 종류의 주사위를 선택해서 게임을 더욱 재미있게!</div>
+                        </div>
+                        <div class="info-mini-card">
+                            <div class="info-mini-card-icon">⚡</div>
+                            <div class="info-mini-card-title">실시간 동기화</div>
+                            <div class="info-mini-card-text">Firebase로 설정되어 유저방과 실시간으로 동기화됩니다!</div>
+                        </div>
+                    </div>
+                `
+            },
+            viewer: {
+                title: '유저방 상세 정보',
+                body: `
+                    <div class="modal-description">
+                        <p>유저방은 뽀그방에서 진행되는 게임을 실시간으로 관람할 수 있는 방입니다.</p>
+                        <p>친구의 게임을 응원하며 함께 즐겨보세요!</p>
+                    </div>
+                    <div class="info-cards-grid">
+                        <div class="info-mini-card">
+                            <div class="info-mini-card-icon">👀</div>
+                            <div class="info-mini-card-title">실시간 관람</div>
+                            <div class="info-mini-card-text">뽀그방에서 일어나는 모든 일을 실시간으로 볼 수 있어요!</div>
+                        </div>
+                        <div class="info-mini-card">
+                            <div class="info-mini-card-icon">🚫</div>
+                            <div class="info-mini-card-title">조작 불가</div>
+                            <div class="info-mini-card-text">보기만 가능하며 게임에 영향을 줄 수 없어요.</div>
+                        </div>
+                        <div class="info-mini-card">
+                            <div class="info-mini-card-icon">📊</div>
+                            <div class="info-mini-card-title">말 정보 표시</div>
+                            <div class="info-mini-card-text">모든 말의 위치와 상태를 한눈에 확인할 수 있어요!</div>
+                        </div>
+                        <div class="info-mini-card">
+                            <div class="info-mini-card-icon">📱</div>
+                            <div class="info-mini-card-title">모바일 지원</div>
+                            <div class="info-mini-card-text">
+                                <p>언제 어디서나 편하게 관람하세요!</p>
+                                <p>하지만 모바일에서는 말의 위치가 조금 안맞습니다. 양해부탁드립니다!!</p>
+                                    </div>
+                        </div>
+                    </div>
+                `
+            },
+            tutorial: {
+                title: '튜토리얼',
+                body: `
+                    <div class="modal-description">
+                        처음이신가요? 걱정하지 마세요! 간단한 5단계로 게임을 시작할 수 있어요.
+                    </div>
+                    <div class="tutorial-step">
+                        <div class="step-number">1</div>
+                        <div class="step-text">뽀그방에 입장하여 비밀번호를 입력합니다.</div>
+                    </div>
+                    <div class="tutorial-step">
+                        <div class="step-number">2</div>
+                        <div class="step-text">말 갯수를 조절하고 원하는 이미지로 꾸며줍니다.</div>
+                    </div>
+                    <div class="tutorial-step">
+                        <div class="step-number">3</div>
+                        <div class="step-text">말 목록에서 말을 드래그하여 보드에 배치합니다.</div>
+                    </div>
+                    <div class="tutorial-step">
+                        <div class="step-number">4</div>
+                        <div class="step-text">주사위 종류를 선택하고 "주사위 굴리기"를 클릭합니다.</div>
+                    </div>
+                    <div class="tutorial-step">
+                        <div class="step-number">5</div>
+                        <div class="step-text">나온 숫자만큼 말을 이동시키며 게임을 즐깁니다!</div>
+                    </div>
+                `
+            },
+            faq: {
+                title: '자주 묻는 질문',
+                body: `
+                    <div class="faq-item">
+                        <div class="faq-question">Q. 몇 명이서 플레이할 수 있나요?</div>
+                        <div class="faq-answer">A. 최대 30개의 말을 생성할 수 있어서 많은 친구들과 함께 즐길 수 있어요!</div>
+                    </div>
+                    <div class="faq-item">
+                        <div class="faq-question">Q. 모바일에서도 되나요?</div>
+                        <div class="faq-answer">A. 네! 완전 반응형으로 제작되어 모든 기기에서 플레이 가능합니다.</div>
+                    </div>
+                    <div class="faq-item">
+                        <div class="faq-question">Q. 실시간 동기화가 되나요?</div>
+                        <div class="faq-answer">A. 네! 다만, 살짝의 딜레이가 있으니 이 점 유의해주세요!</div>
+                    </div>
+                    <div class="faq-item">
+                        <div class="faq-question">Q. 비밀번호가 뭔가요?</div>
+                        <div class="faq-answer">A. 비밀번호는 비밀 입니다. 절대 안 알려드려요~!</div>
+                    </div>
+                    <div class="faq-item">
+                        <div class="faq-question">Q. 말을 어떻게 배치하나요?</div>
+                        <div class="faq-answer">A. 말 목록에서 말을 클릭한 채로 드래그하여 원하는 칸에 놓으면 됩니다!</div>
+                    </div>
+                `
+            }
+        };
+
+        function openModal(type) {
+            const modal = document.getElementById('modal');
+            const title = document.getElementById('modalTitle');
+            const body = document.getElementById('modalBody');
+            
+            title.textContent = modalContents[type].title;
+            body.innerHTML = modalContents[type].body;
+            
+            modal.style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal() {
+            document.getElementById('modal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+
+        // 모달 외부 클릭 시 닫기
+        window.onclick = function(event) {
+            const modal = document.getElementById('modal');
+            if (event.target == modal) {
+                closeModal();
+            }
+        }
+    </script>
+</body>
+</html>
