@@ -1,0 +1,17 @@
+# Cloudflare Workers Assets 캐싱 정책
+# next.config.ts의 headers는 Workers Assets에 적용되지 않으므로 여기서 직접 지정.
+
+/_next/static/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/boardgame/sounds/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/boardgame/images/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/boardgame/*.css
+  Cache-Control: public, max-age=86400, must-revalidate
+
+/boardgame/*.js
+  Cache-Control: public, max-age=86400, must-revalidate

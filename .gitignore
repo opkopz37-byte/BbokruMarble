@@ -20,6 +20,11 @@ next-env.d.ts
 # TypeScript incremental build cache
 tsconfig.tsbuildinfo
 
+# Cloudflare / OpenNext
+.open-next/
+.wrangler/
+.dev.vars
+
 # 환경 변수
 .env
 .env*.local

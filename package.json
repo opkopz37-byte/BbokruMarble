@@ -6,7 +6,10 @@
     "dev": "next dev -p 3010",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "verify:cloudflare": "opennextjs-cloudflare build",
+    "preview:cloudflare": "opennextjs-cloudflare preview",
+    "deploy:cloudflare": "opennextjs-cloudflare deploy"
   },
   "dependencies": {
     "firebase": "^12.12.1",
@@ -17,9 +20,11 @@
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
+    "@opennextjs/cloudflare": "^1.19.5",
     "@types/node": "^22",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "typescript": "^5"
+    "typescript": "^5",
+    "wrangler": "^4.87.0"
   }
 }

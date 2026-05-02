@@ -1,0 +1,20 @@
+/**
+ * Cloudflare Workers 배포 설정 (OpenNext)
+ * 자세한 옵션: https://developers.cloudflare.com/workers/wrangler/configuration/
+ */
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "bbogrene-game-studio",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2026-04-01",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS",
+    // 보드게임 정적 페이지는 .html URL을 그대로 유지 (리다이렉트 방지)
+    "html_handling": "none"
+  },
+  "observability": {
+    "enabled": true
+  }
+}
