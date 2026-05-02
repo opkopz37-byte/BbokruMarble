@@ -16,6 +16,7 @@ import {
   type Participant,
   type RpsRoom,
 } from "@/lib/rps";
+import ConfirmModal from "@/components/ConfirmModal";
 import styles from "./page.module.css";
 
 const ease = [0.22, 1, 0.36, 1] as const;
@@ -23,10 +24,12 @@ const ease = [0.22, 1, 0.36, 1] as const;
 export default function ArenaPage() {
   const router = useRouter();
   const [room, setRoom] = useState<RpsRoom | null>(null);
+  const [roomLoaded, setRoomLoaded] = useState(false);
   const [participantId, setParticipantId] = useState<string | null>(null);
   const [isHost, setIsHost] = useState<boolean | null>(null);
   // Tracking time as null until client-side mount avoids hydration mismatch
   const [now, setNow] = useState<number | null>(null);
+  const [exitConfirmOpen, setExitConfirmOpen] = useState(false);
   const revealTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Detect role from sessionStorage (client only)
@@ -49,6 +52,7 @@ export default function ArenaPage() {
   useEffect(() => {
     const unsub = onValue(ref(db, RPS_ROOM_PATH), (snap) => {
       setRoom(snap.val());
+      setRoomLoaded(true);
     });
     return () => unsub();
   }, []);
@@ -59,6 +63,18 @@ export default function ArenaPage() {
     const partRef = ref(db, `${RPS_ROOM_PATH}/participants/${participantId}`);
     onDisconnect(partRef).remove();
   }, [participantId, isHost]);
+
+  // 호스트가 진행 중 탭/브라우저를 닫으려 하면 경고 (모달은 못 띄우지만 네이티브 prompt)
+  useEffect(() => {
+    if (!isHost) return;
+    if (room?.status === "waiting" || room?.status === "finished") return;
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [isHost, room?.status]);
 
   // Tick clock for countdown — initialize on client only.
   // 1초 단위 표시이므로 250ms면 충분 (불필요한 리렌더 ↓).
@@ -73,13 +89,21 @@ export default function ArenaPage() {
     return () => clearInterval(id);
   }, [room?.status]);
 
-  // If room returns to "waiting", redirect to lobby
+  // 방이 사라지거나(호스트가 종료) waiting 으로 돌아가면 적절히 이동
   useEffect(() => {
-    if (!room || isHost === null) return;
+    if (!roomLoaded || isHost === null) return;
+    if (!room) {
+      // 호스트가 게임 종료를 누른 경우 - 방이 통째로 삭제됨
+      sessionStorage.removeItem("rps:isHost");
+      sessionStorage.removeItem("rps:participantId");
+      sessionStorage.removeItem("rps:nickname");
+      router.replace("/games/rps");
+      return;
+    }
     if (room.status === "waiting") {
       router.replace(isHost ? "/games/rps/host" : "/games/rps/play");
     }
-  }, [room, isHost, router]);
+  }, [roomLoaded, room, isHost, router]);
 
   const allParticipants = useMemo<Participant[]>(() => {
     if (!room?.participants) return [];
@@ -217,45 +241,47 @@ export default function ArenaPage() {
   }
 
   /**
-   * 나가기.
-   * - 참가자: 자기 자신을 room.participants 에서 제거 → 다른 사람 화면에서도 사라짐
-   * - 호스트: 게임을 대기 상태로 되돌리고 (모두를 로비로 보냄)
+   * 나가기 요청.
+   * - 호스트: ConfirmModal 띄움 → 확인 시 방 통째로 삭제
+   * - 참가자: 즉시 자기 자신만 제거하고 이동
    */
-  async function handleExit() {
+  function requestExit() {
+    if (isHost) {
+      setExitConfirmOpen(true);
+    } else {
+      void handleParticipantExit();
+    }
+  }
+
+  async function handleParticipantExit() {
     try {
-      if (isHost) {
-        const ok = window.confirm(
-          "정말 나가시겠어요? 진행 중인 게임이 종료되고 모든 참가자가 로비로 이동합니다.",
+      if (participantId) {
+        const partRef = ref(
+          db,
+          `${RPS_ROOM_PATH}/participants/${participantId}`,
         );
-        if (!ok) return;
-        sessionStorage.removeItem("rps:isHost");
-        await update(ref(db, RPS_ROOM_PATH), {
-          status: "waiting",
-          currentRound: 0,
-          hostChoice: null,
-          countdownEndsAt: null,
-          lastResult: null,
-          winner: null,
-        });
-        router.push("/games/rps");
-      } else {
-        if (participantId) {
-          const partRef = ref(
-            db,
-            `${RPS_ROOM_PATH}/participants/${participantId}`,
-          );
-          // onDisconnect 예약을 먼저 해제하고 즉시 제거
-          await onDisconnect(partRef).cancel();
-          await remove(partRef);
-          sessionStorage.removeItem("rps:participantId");
-          sessionStorage.removeItem("rps:nickname");
-        }
-        router.push("/games/rps");
+        await onDisconnect(partRef).cancel();
+        await remove(partRef);
+        sessionStorage.removeItem("rps:participantId");
+        sessionStorage.removeItem("rps:nickname");
       }
     } catch (err) {
-      console.error("[rps arena] exit failed:", err);
+      console.error("[rps arena] participant exit failed:", err);
+    } finally {
       router.push("/games/rps");
     }
+  }
+
+  async function handleHostConfirmExit() {
+    setExitConfirmOpen(false);
+    try {
+      sessionStorage.removeItem("rps:isHost");
+      // 방 자체를 삭제 → 다른 참가자 화면에서도 자동으로 로비로 이동
+      await remove(ref(db, RPS_ROOM_PATH));
+    } catch (err) {
+      console.error("[rps arena] host exit/reset failed:", err);
+    }
+    router.push("/games/rps");
   }
 
   // ============ RENDER ============
@@ -287,12 +313,12 @@ export default function ArenaPage() {
       <div className={styles.topBar}>
         <button
           type="button"
-          onClick={handleExit}
+          onClick={requestExit}
           className={styles.exitBtn}
-          aria-label="나가기"
+          aria-label={isHost ? "게임 종료하고 나가기" : "나가기"}
         >
           <span aria-hidden>←</span>
-          <span>나가기</span>
+          <span>{isHost ? "게임 종료" : "나가기"}</span>
         </button>
         <div className={styles.topInfo}>
           <span className={styles.roundBadge}>
@@ -549,6 +575,17 @@ export default function ArenaPage() {
           )}
         </div>
       )}
+
+      <ConfirmModal
+        open={exitConfirmOpen}
+        title="게임을 종료하시겠습니까?"
+        message="확인을 누르면 현재 방과 모든 참가자 정보가 초기화됩니다. 참가자들도 자동으로 로비로 이동해요."
+        confirmLabel="종료하기"
+        cancelLabel="취소"
+        tone="danger"
+        onConfirm={handleHostConfirmExit}
+        onCancel={() => setExitConfirmOpen(false)}
+      />
     </div>
   );
 }

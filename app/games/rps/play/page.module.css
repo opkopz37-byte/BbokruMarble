@@ -151,6 +151,25 @@
   cursor: not-allowed;
 }
 
+.forceResetBtn {
+  margin-top: 16px;
+  background: transparent;
+  color: var(--gray-500);
+  padding: 8px 14px;
+  border: none;
+  font-weight: 700;
+  font-size: 0.85rem;
+  font-family: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  transition: color 0.2s ease;
+}
+
+.forceResetBtn:hover {
+  color: var(--black);
+}
+
 .topBar {
   display: flex;
   justify-content: space-between;

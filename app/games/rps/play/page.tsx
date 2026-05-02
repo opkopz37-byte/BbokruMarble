@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "motion/react";
 import { get, onDisconnect, onValue, ref, remove, set } from "firebase/database";
+import ConfirmModal from "@/components/ConfirmModal";
 import { db } from "@/lib/firebase";
 import {
   generateClientId,
@@ -23,6 +24,7 @@ function suggestNickname() {
 export default function RpsPlayPage() {
   const router = useRouter();
   const [room, setRoom] = useState<RpsRoom | null>(null);
+  const [roomLoaded, setRoomLoaded] = useState(false);
   const [loading, setLoading] = useState(true);
   const [participantId, setParticipantId] = useState<string | null>(null);
   const [nickname, setNickname] = useState<string | null>(null);
@@ -34,6 +36,10 @@ export default function RpsPlayPage() {
   const [needsNickname, setNeedsNickname] = useState(false);
   const [nicknameInput, setNicknameInput] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  // 방 강제 초기화 모달 (lateJoiner 화면에서)
+  const [forceResetOpen, setForceResetOpen] = useState(false);
+  const [forceResetting, setForceResetting] = useState(false);
 
   const initOnce = useRef(false);
 
@@ -119,6 +125,7 @@ export default function RpsPlayPage() {
   useEffect(() => {
     const unsub = onValue(ref(db, RPS_ROOM_PATH), (snap) => {
       setRoom(snap.val());
+      setRoomLoaded(true);
     });
     return () => unsub();
   }, []);
@@ -130,13 +137,38 @@ export default function RpsPlayPage() {
     onDisconnect(partRef).remove();
   }, [participantId]);
 
-  // Auto-redirect to arena when game starts
+  // Auto-redirect to arena when game starts.
+  // 입장 후에 호스트가 방을 통째로 종료(=room 삭제)했다면 noRoom 화면으로 보여주고
+  // sessionStorage 도 정리해서 새로 입장할 수 있는 상태로 되돌림.
   useEffect(() => {
-    if (!room || !participantId) return;
+    if (!participantId || !roomLoaded) return;
+    if (room === null) {
+      sessionStorage.removeItem("rps:participantId");
+      sessionStorage.removeItem("rps:nickname");
+      setParticipantId(null);
+      setNickname(null);
+      setNoRoom(true);
+      return;
+    }
     if (room.status !== "waiting") {
       router.replace("/games/rps/arena");
     }
-  }, [room, participantId, router]);
+  }, [roomLoaded, room, participantId, router]);
+
+  /** 호스트가 자리를 비웠는데 방 상태가 멈춰 있을 때 사용자가 직접 초기화 */
+  async function handleForceReset() {
+    setForceResetting(true);
+    try {
+      await remove(ref(db, RPS_ROOM_PATH));
+      setForceResetOpen(false);
+      setLateJoiner(false);
+      setNoRoom(true);
+    } catch (err) {
+      console.error("[rps play] force reset failed:", err);
+    } finally {
+      setForceResetting(false);
+    }
+  }
 
   /** 나가기: 입장한 상태였으면 Firebase에서 자기 자신 제거 후 이동 */
   async function handleExit() {
@@ -220,8 +252,26 @@ export default function RpsPlayPage() {
             <Link href="/games/rps" className={styles.backBtn}>
               돌아가기 →
             </Link>
+            <button
+              type="button"
+              onClick={() => setForceResetOpen(true)}
+              className={styles.forceResetBtn}
+            >
+              방이 멈춰있나요? 초기화하기
+            </button>
           </div>
         </div>
+
+        <ConfirmModal
+          open={forceResetOpen}
+          title="이 방을 초기화할까요?"
+          message="현재 방의 모든 정보가 삭제됩니다. 다른 사람이 진짜로 게임 중이라면 그 게임도 같이 종료돼요. 호스트 브라우저가 꺼졌을 때만 사용해주세요."
+          confirmLabel={forceResetting ? "초기화 중..." : "초기화"}
+          cancelLabel="취소"
+          tone="danger"
+          onConfirm={handleForceReset}
+          onCancel={() => setForceResetOpen(false)}
+        />
       </div>
     );
   }

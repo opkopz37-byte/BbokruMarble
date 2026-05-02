@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { get, onValue, ref, set, update } from "firebase/database";
+import { get, onValue, ref, remove, set, update } from "firebase/database";
 import { db } from "@/lib/firebase";
 import {
   generateClientId,
@@ -12,8 +12,8 @@ import {
   type Participant,
 } from "@/lib/rps";
 import SectionLabel from "@/components/SectionLabel";
-import BackButton from "@/components/BackButton";
 import Magnetic from "@/components/Magnetic";
+import ConfirmModal from "@/components/ConfirmModal";
 import styles from "./page.module.css";
 
 const ease = [0.22, 1, 0.36, 1] as const;
@@ -26,6 +26,7 @@ export default function RpsHostPage() {
   const router = useRouter();
   const [room, setRoom] = useState<RpsRoom | null>(null);
   const [initError, setInitError] = useState<string | null>(null);
+  const [exitConfirmOpen, setExitConfirmOpen] = useState(false);
   const initOnce = useRef(false);
 
   // Initialize room on mount — only if room doesn't exist or is finished
@@ -87,6 +88,17 @@ export default function RpsHostPage() {
     );
   }, [room]);
 
+  // 호스트가 입장자가 있는 상태에서 탭/브라우저 닫으려 하면 경고
+  useEffect(() => {
+    if (participants.length === 0) return;
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [participants.length]);
+
   function startGame() {
     if (!room) return;
     if (participants.length === 0) return;
@@ -109,13 +121,45 @@ export default function RpsHostPage() {
     router.push("/games/rps/arena");
   }
 
+  /**
+   * 호스트가 명시적으로 게임 종료. 방을 통째로 삭제 → 모든 참가자도
+   * arena/play 페이지에서 자동으로 로비로 빠짐.
+   */
+  async function handleConfirmExit() {
+    setExitConfirmOpen(false);
+    try {
+      sessionStorage.removeItem("rps:isHost");
+      await remove(ref(db, RPS_ROOM_PATH));
+    } catch (err) {
+      console.error("[rps host] exit/reset failed:", err);
+    }
+    router.push("/games/rps");
+  }
+
+  function requestExit() {
+    // 입장자가 한 명도 없으면 굳이 모달 띄울 필요 없이 바로 정리하고 이동
+    if (participants.length === 0) {
+      void handleConfirmExit();
+      return;
+    }
+    setExitConfirmOpen(true);
+  }
+
   return (
     <div className={styles.page}>
       <section className={styles.hero}>
         <div className={styles.heroBg} aria-hidden />
 
         <div className={styles.heroTop}>
-          <BackButton href="/games/rps" label="게임 정보로" />
+          <button
+            type="button"
+            onClick={requestExit}
+            className={styles.backLink}
+            aria-label="게임 종료하고 나가기"
+          >
+            <span aria-hidden>←</span>
+            <span>게임 종료</span>
+          </button>
           <span className={styles.role}>HOST</span>
         </div>
 
@@ -188,6 +232,17 @@ export default function RpsHostPage() {
           </Magnetic>
         </div>
       </section>
+
+      <ConfirmModal
+        open={exitConfirmOpen}
+        title="게임을 종료하시겠습니까?"
+        message="확인을 누르면 현재 방과 모든 참가자 정보가 초기화됩니다. 참가자들도 자동으로 로비로 이동해요."
+        confirmLabel="종료하기"
+        cancelLabel="취소"
+        tone="danger"
+        onConfirm={handleConfirmExit}
+        onCancel={() => setExitConfirmOpen(false)}
+      />
     </div>
   );
 }
