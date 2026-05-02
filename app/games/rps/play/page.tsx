@@ -4,8 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "motion/react";
-import { get, onDisconnect, onValue, ref, set } from "firebase/database";
-import BackButton from "@/components/BackButton";
+import { get, onDisconnect, onValue, ref, remove, set } from "firebase/database";
 import { db } from "@/lib/firebase";
 import {
   generateClientId,
@@ -137,7 +136,27 @@ export default function RpsPlayPage() {
     if (room.status !== "waiting") {
       router.replace("/games/rps/arena");
     }
-  }, [room?.status, participantId, router]);
+  }, [room, participantId, router]);
+
+  /** 나가기: 입장한 상태였으면 Firebase에서 자기 자신 제거 후 이동 */
+  async function handleExit() {
+    try {
+      if (participantId) {
+        const partRef = ref(
+          db,
+          `${RPS_ROOM_PATH}/participants/${participantId}`,
+        );
+        await onDisconnect(partRef).cancel();
+        await remove(partRef);
+        sessionStorage.removeItem("rps:participantId");
+        sessionStorage.removeItem("rps:nickname");
+      }
+    } catch (err) {
+      console.error("[rps play] exit failed:", err);
+    } finally {
+      router.push("/games/rps");
+    }
+  }
 
   const allParticipants = useMemo(() => {
     if (!room?.participants) return [];
@@ -212,7 +231,15 @@ export default function RpsPlayPage() {
     return (
       <div className={styles.page}>
         <div className={styles.topBar}>
-          <BackButton href="/games/rps" label="나가기" />
+          <button
+            type="button"
+            onClick={handleExit}
+            className={styles.exitBtn}
+            aria-label="나가기"
+          >
+            <span aria-hidden>←</span>
+            <span>나가기</span>
+          </button>
         </div>
         <div className={styles.center}>
           <motion.form
@@ -277,7 +304,15 @@ export default function RpsPlayPage() {
   return (
     <div className={styles.page}>
       <div className={styles.topBar}>
-        <BackButton href="/games/rps" label="나가기" />
+        <button
+          type="button"
+          onClick={handleExit}
+          className={styles.exitBtn}
+          aria-label="나가기"
+        >
+          <span aria-hidden>←</span>
+          <span>나가기</span>
+        </button>
         <span className={styles.nickBadge}>{nickname ?? "..."}</span>
       </div>
 

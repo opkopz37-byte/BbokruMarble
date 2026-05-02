@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { onDisconnect, onValue, ref, update } from "firebase/database";
+import { onDisconnect, onValue, ref, remove, update } from "firebase/database";
 import { db } from "@/lib/firebase";
 import {
   CHOICES,
@@ -16,7 +16,6 @@ import {
   type Participant,
   type RpsRoom,
 } from "@/lib/rps";
-import BackButton from "@/components/BackButton";
 import styles from "./page.module.css";
 
 const ease = [0.22, 1, 0.36, 1] as const;
@@ -80,7 +79,7 @@ export default function ArenaPage() {
     if (room.status === "waiting") {
       router.replace(isHost ? "/games/rps/host" : "/games/rps/play");
     }
-  }, [room?.status, isHost, router]);
+  }, [room, isHost, router]);
 
   const allParticipants = useMemo<Participant[]>(() => {
     if (!room?.participants) return [];
@@ -114,25 +113,6 @@ export default function ArenaPage() {
     const sec = Math.ceil((room.countdownEndsAt - now) / 1000);
     return sec > 0 ? sec : 0;
   }, [room?.countdownEndsAt, now]);
-
-  // Bot auto-pick (host only)
-  useEffect(() => {
-    if (!isHost || room?.status !== "selecting") return;
-    const bots = aliveParticipants.filter(
-      (p) => p.id.startsWith("bot_") && !p.currentChoice
-    );
-    if (bots.length === 0) return;
-    const timers = bots.map((b) => {
-      const delay = 800 + Math.random() * 3500;
-      return setTimeout(() => {
-        const choice = CHOICES[Math.floor(Math.random() * 3)];
-        update(ref(db, `${RPS_ROOM_PATH}/participants/${b.id}`), {
-          currentChoice: choice,
-        });
-      }, delay);
-    });
-    return () => timers.forEach((t) => clearTimeout(t));
-  }, [isHost, room?.status, aliveParticipants]);
 
   // Auto-apply reveal when countdown ends (host only)
   useEffect(() => {
@@ -236,6 +216,48 @@ export default function ArenaPage() {
     update(ref(db), updates);
   }
 
+  /**
+   * 나가기.
+   * - 참가자: 자기 자신을 room.participants 에서 제거 → 다른 사람 화면에서도 사라짐
+   * - 호스트: 게임을 대기 상태로 되돌리고 (모두를 로비로 보냄)
+   */
+  async function handleExit() {
+    try {
+      if (isHost) {
+        const ok = window.confirm(
+          "정말 나가시겠어요? 진행 중인 게임이 종료되고 모든 참가자가 로비로 이동합니다.",
+        );
+        if (!ok) return;
+        sessionStorage.removeItem("rps:isHost");
+        await update(ref(db, RPS_ROOM_PATH), {
+          status: "waiting",
+          currentRound: 0,
+          hostChoice: null,
+          countdownEndsAt: null,
+          lastResult: null,
+          winner: null,
+        });
+        router.push("/games/rps");
+      } else {
+        if (participantId) {
+          const partRef = ref(
+            db,
+            `${RPS_ROOM_PATH}/participants/${participantId}`,
+          );
+          // onDisconnect 예약을 먼저 해제하고 즉시 제거
+          await onDisconnect(partRef).cancel();
+          await remove(partRef);
+          sessionStorage.removeItem("rps:participantId");
+          sessionStorage.removeItem("rps:nickname");
+        }
+        router.push("/games/rps");
+      }
+    } catch (err) {
+      console.error("[rps arena] exit failed:", err);
+      router.push("/games/rps");
+    }
+  }
+
   // ============ RENDER ============
 
   if (!room || isHost === null) {
@@ -263,10 +285,15 @@ export default function ArenaPage() {
     <div className={styles.page}>
       {/* TOP BAR */}
       <div className={styles.topBar}>
-        <BackButton
-          href={isHost ? "/games/rps/host" : "/games/rps/play"}
-          label="나가기"
-        />
+        <button
+          type="button"
+          onClick={handleExit}
+          className={styles.exitBtn}
+          aria-label="나가기"
+        >
+          <span aria-hidden>←</span>
+          <span>나가기</span>
+        </button>
         <div className={styles.topInfo}>
           <span className={styles.roundBadge}>
             ROUND {room.currentRound || 1}
@@ -350,6 +377,7 @@ export default function ArenaPage() {
           {status === "revealed" && room.lastResult && (() => {
             const eliminated = room.lastResult.eliminated ?? [];
             const survivors = room.lastResult.survivors ?? [];
+            const hostChoice = room.lastResult.hostChoice;
             return (
               <motion.div
                 key="rsd"
@@ -359,6 +387,9 @@ export default function ArenaPage() {
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.4, ease, delay: 0.5 }}
               >
+                <span className={styles.resultHostPick}>
+                  주최자: {CHOICE_EMOJI[hostChoice]} {CHOICE_LABEL[hostChoice]}
+                </span>
                 {room.lastResult.isAllEliminated ? (
                   <span className={styles.resultBadgePink}>
                     전원 탈락! 같은 라운드 다시
@@ -570,6 +601,7 @@ function PlayerCard({
   isWinner,
   big,
 }: PlayerCardProps) {
+  void alive;
   const showCard = picked || (showFaceUp && choice);
   const cardFaceUp = showFaceUp && !!choice;
 
@@ -620,12 +652,16 @@ function PlayerCard({
       </div>
 
       <div className={styles.seatStatus}>
-        {eliminated
-          ? "KO"
+        {/*
+          순서 중요: justEliminated/justSurvived 는 이번 라운드의 결과 표시이므로
+          eliminated(KO) 보다 먼저 평가해야 갓 탈락한 참가자에게 "✗ 탈락" 이 보인다.
+        */}
+        {justEliminated
+          ? "✗ 탈락"
           : justSurvived
           ? "✓ 생존"
-          : justEliminated
-          ? "✗ 탈락"
+          : eliminated
+          ? "KO"
           : picked
           ? "준비"
           : "선택 중"}

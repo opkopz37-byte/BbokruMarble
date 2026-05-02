@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
@@ -26,7 +25,6 @@ function generateHostNickname() {
 export default function RpsHostPage() {
   const router = useRouter();
   const [room, setRoom] = useState<RpsRoom | null>(null);
-  const [copied, setCopied] = useState(false);
   const [initError, setInitError] = useState<string | null>(null);
   const initOnce = useRef(false);
 
@@ -111,42 +109,6 @@ export default function RpsHostPage() {
     router.push("/games/rps/arena");
   }
 
-  function addBot() {
-    const id = `bot_${generateClientId()}`;
-    const num = Math.floor(100 + Math.random() * 900);
-    set(ref(db, `${RPS_ROOM_PATH}/participants/${id}`), {
-      id,
-      nickname: `🤖봇${num}`,
-      alive: true,
-      currentChoice: null,
-      eliminatedRound: null,
-      joinedAt: Date.now(),
-    });
-  }
-
-  function clearBots() {
-    const updates: Record<string, unknown> = {};
-    participants
-      .filter((p) => p.id.startsWith("bot_"))
-      .forEach((p) => {
-        updates[`${RPS_ROOM_PATH}/participants/${p.id}`] = null;
-      });
-    if (Object.keys(updates).length === 0) return;
-    update(ref(db), updates);
-  }
-
-  const [joinUrl, setJoinUrl] = useState("");
-  useEffect(() => {
-    setJoinUrl(`${window.location.origin}/games/rps/play`);
-  }, []);
-
-  async function copyJoinUrl() {
-    if (!joinUrl) return;
-    await navigator.clipboard.writeText(joinUrl);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1600);
-  }
-
   return (
     <div className={styles.page}>
       <section className={styles.hero}>
@@ -163,27 +125,8 @@ export default function RpsHostPage() {
         </p>
       </section>
 
-      {/* ============ JOIN LINK ============ */}
-      <section className={styles.section}>
-        <SectionLabel index="01" label="/ JOIN LINK" />
-        <div className={styles.linkBox}>
-          <div className={styles.linkLeft}>
-            <span className={styles.linkLabel}>참가 링크</span>
-            <span className={styles.linkValue}>{joinUrl || "..."}</span>
-          </div>
-          <button
-            type="button"
-            className={styles.copyBtn}
-            onClick={copyJoinUrl}
-            disabled={!joinUrl}
-          >
-            {copied ? "복사됨 ✓" : "링크 복사"}
-          </button>
-        </div>
-        <p className={styles.linkHint}>
-          참가자는 게임 페이지의 "참가하기" 버튼만 누르면 자동 입장해요.
-        </p>
-        {initError && (
+      {initError && (
+        <section className={styles.section}>
           <div className={styles.errorBanner}>
             <strong>방 생성 실패:</strong> {initError}
             <br />
@@ -191,20 +134,20 @@ export default function RpsHostPage() {
               Firebase 보안 규칙에서 /rps 경로 쓰기가 허용되어 있는지 확인하세요.
             </span>
           </div>
-        )}
-      </section>
+        </section>
+      )}
 
       {/* ============ PARTICIPANTS ============ */}
       <section className={styles.section}>
         <div className={styles.partHead}>
-          <SectionLabel index="02" label="/ PARTICIPANTS" />
+          <SectionLabel index="01" label="/ PARTICIPANTS" />
           <span className={styles.partCount}>{participants.length}명 입장</span>
         </div>
 
         {participants.length === 0 ? (
           <div className={styles.emptyState}>
             아직 아무도 들어오지 않았어요.<br />
-            위의 참가 링크를 공유하세요.
+            참가자에게 게임 페이지의 "참가하기" 버튼을 눌러달라고 알려주세요.
           </div>
         ) : (
           <ul className={styles.partList}>
@@ -231,7 +174,7 @@ export default function RpsHostPage() {
 
       {/* ============ START ============ */}
       <section className={styles.section}>
-        <SectionLabel index="03" label="/ START" />
+        <SectionLabel index="02" label="/ START" />
         <div className={styles.controls}>
           <Magnetic strength={0.3}>
             <button
@@ -243,22 +186,6 @@ export default function RpsHostPage() {
               🎮 게임 시작! ({participants.length}명)
             </button>
           </Magnetic>
-        </div>
-
-        {/* Test bots */}
-        <div className={styles.devTools}>
-          <span className={styles.devLabel}>🛠 개발용</span>
-          <button type="button" className={styles.devBtn} onClick={addBot}>
-            🤖 봇 +1
-          </button>
-          <button
-            type="button"
-            className={styles.devBtn}
-            onClick={clearBots}
-            disabled={!participants.some((p) => p.id.startsWith("bot_"))}
-          >
-            봇 모두 제거
-          </button>
         </div>
       </section>
     </div>

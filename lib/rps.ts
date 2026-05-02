@@ -61,11 +61,26 @@ export const CHOICE_LABEL: Record<Choice, string> = {
   scissors: "가위",
 };
 
+/**
+ * 가위바위보 승부 규칙 (key가 value를 이김):
+ *   rock(바위)     이김  scissors(가위)
+ *   scissors(가위) 이김  paper(보)
+ *   paper(보)      이김  rock(바위)
+ */
 const BEATS: Record<Choice, Choice> = {
   rock: "scissors",
   scissors: "paper",
   paper: "rock",
 };
+
+/** 두 패의 결과를 평가. left가 right를 이기면 "win", 지면 "lose", 같으면 "draw". */
+export function compareChoices(
+  left: Choice,
+  right: Choice,
+): "win" | "lose" | "draw" {
+  if (left === right) return "draw";
+  return BEATS[left] === right ? "win" : "lose";
+}
 
 export function generateClientId(): string {
   return Math.random().toString(36).substring(2, 12);
@@ -73,18 +88,19 @@ export function generateClientId(): string {
 
 /**
  * Host vs All resolution.
- * - Each participant compared to hostChoice independently.
- * - Draw with host (same choice) → survive
- * - Beats host → survive
- * - Loses to host → eliminated
- * - Didn't pick → eliminated (counts as loss)
  *
- * If alive participants > 0 but ALL would be eliminated this round → isAllEliminated=true
- * (round should be retried, no actual eliminations applied).
+ * 각 참가자를 호스트의 패와 1:1로 비교:
+ * - 같은 패(무승부)         → 살아남음
+ * - 호스트의 패를 이김       → 살아남음
+ * - 호스트의 패에 짐         → 탈락
+ * - 패를 안 골랐음(미선택)   → 탈락
+ *
+ * 살아있는 참가자가 있는데 전원 탈락 → isAllEliminated=true
+ * (탈락 적용하지 말고 같은 라운드 다시 진행)
  */
 export function resolveHostVsAll(
   hostChoice: Choice,
-  alive: Participant[]
+  alive: Participant[],
 ): { eliminated: string[]; survivors: string[]; isAllEliminated: boolean } {
   const eliminated: string[] = [];
   const survivors: string[] = [];
@@ -94,14 +110,12 @@ export function resolveHostVsAll(
       eliminated.push(p.id);
       return;
     }
-    if (p.currentChoice === hostChoice) {
-      survivors.push(p.id); // draw
-      return;
-    }
-    if (BEATS[p.currentChoice] === hostChoice) {
-      survivors.push(p.id); // beats host
+    // 참가자 입장에서 호스트와 비교: win/draw 면 살아남음, lose 면 탈락
+    const result = compareChoices(p.currentChoice, hostChoice);
+    if (result === "lose") {
+      eliminated.push(p.id);
     } else {
-      eliminated.push(p.id); // loses to host
+      survivors.push(p.id);
     }
   });
 

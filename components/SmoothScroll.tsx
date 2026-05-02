@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ReactLenis, type LenisRef } from "lenis/react";
 import { usePathname } from "next/navigation";
 
@@ -11,6 +11,16 @@ export default function SmoothScroll({
 }) {
   const pathname = usePathname();
   const lenisRef = useRef<LenisRef | null>(null);
+  // 모바일/터치 디바이스에서는 Lenis가 네이티브 모멘텀 스크롤을 가로채면서
+  // 입력 → 화면 반영 사이 lag이 생기고 버벅인다. 데스크톱에서만 smooth scroll 적용.
+  const [enableLenis, setEnableLenis] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const isCoarsePointer = window.matchMedia("(pointer: coarse)").matches;
+    const isNarrow = window.innerWidth < 1024;
+    setEnableLenis(!isCoarsePointer && !isNarrow);
+  }, []);
 
   // Reset scroll to top instantly on route change
   useEffect(() => {
@@ -21,6 +31,10 @@ export default function SmoothScroll({
       window.scrollTo(0, 0);
     }
   }, [pathname]);
+
+  if (!enableLenis) {
+    return <>{children}</>;
+  }
 
   return (
     <ReactLenis

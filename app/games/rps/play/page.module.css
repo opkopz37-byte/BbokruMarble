@@ -162,6 +162,29 @@
   flex-wrap: wrap;
 }
 
+.exitBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 900;
+  font-size: 0.85rem;
+  letter-spacing: 0.06em;
+  color: var(--black);
+  padding: 8px 16px;
+  border: 2px solid var(--black);
+  background: var(--white);
+  border-radius: 100px;
+  box-shadow: 3px 3px 0 var(--black);
+  font-family: inherit;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.exitBtn:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 5px 5px 0 var(--black);
+}
+
 .roomBadge {
   display: inline-block;
   background: var(--white);
