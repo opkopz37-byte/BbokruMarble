@@ -4,12 +4,14 @@
 let database = null;
 let gameStateRef = null;
 let assetsRef = null;
+let positionsRef = null;
 
 try {
     firebase.initializeApp(FIREBASE_CONFIG);
     database = firebase.database();
     gameStateRef = database.ref('game/state');
     assetsRef = database.ref('game/assets');
+    positionsRef = database.ref('game/positions');
     console.log('✅ Firebase 초기화 완료');
 } catch (error) {
     console.error('❌ Firebase 초기화 실패:', error);
@@ -316,6 +318,7 @@ function updateNameList() {
         input.placeholder = `말${i + 1}`;
         input.addEventListener('input', function(e) {
             gameState.pieceNames[i] = e.target.value;
+            // 매 키스트로크가 아니라 throttle 내부에서 묶어서 전송
             generatePieces();
         });
         
@@ -405,7 +408,8 @@ function generatePieces() {
         });
     }
     renderPiecesList();
-    syncImmediately();
+    // 이름 입력 등 연속 호출 시 throttle로 묶어 전송 (트래픽 절약)
+    syncToFirebase();
 }
 
 /* ============================================
@@ -683,13 +687,14 @@ function startDragOnBoard(e) {
         element.style.left = `${percentX}%`;
         element.style.top = `${percentY}%`;
 
-        // syncToFirebase 내부의 시간 throttle(MIN_SYNC_INTERVAL)이 호출 빈도를 제한함
-        syncToFirebase();
+        // 드래그 중에는 위치만 가볍게 동기화 (200ms throttle)
+        syncPositionsToFirebase();
     };
 
     const onUp = () => {
         document.removeEventListener('mousemove', onMove);
         document.removeEventListener('mouseup', onUp);
+        // 드롭 시 한 번만 전체 state 저장
         syncImmediately();
     };
     
@@ -799,35 +804,73 @@ function showDiceFace(number) {
     dice.style.transform = rotations[number];
 }
 
+// Audio 객체를 src별로 캐싱해서 재사용 (메모리/네트워크 절약)
+const audioCache = new Map();
+function getAudio(src) {
+    let audio = audioCache.get(src);
+    if (!audio) {
+        audio = new Audio(src);
+        audio.preload = 'auto';
+        audioCache.set(src, audio);
+    }
+    return audio;
+}
+
 function playRollSound(theme) {
-    const sound = new Audio(diceThemes[theme].rollSound);
-    sound.volume = 0.7; // 볼륨 70%
+    const sound = getAudio(diceThemes[theme].rollSound);
+    sound.volume = 0.7;
     sound.currentTime = 0;
-    sound.play().catch(err => {
-        console.warn('🔇 주사위 굴리기 소리 재생 실패:', err);
-    });
+    sound.play().catch(() => {});
 }
 
 function speakNumber(number, theme) {
-    const voice = new Audio(diceThemes[theme].voices[number]);
-    voice.volume = 0.8; // 볼륨 80%
+    const voice = getAudio(diceThemes[theme].voices[number]);
+    voice.volume = 0.8;
     setTimeout(() => {
-        voice.play().catch(err => {
-            console.warn('🔇 숫자 음성 재생 실패:', err);
-        });
+        voice.currentTime = 0;
+        voice.play().catch(() => {});
     }, 600);
 }
 
 /* ============================================
-   💾 Firebase 동기화
+   💾 Firebase 동기화 (트래픽/비용 최적화)
+   - state    : 보드 구성/이름/주사위 등 (드물게 변경, full set)
+   - positions: 말/솔드아웃 좌표 (드래그 중 자주 변경, 가벼움)
+   - assets   : 이미지 (실제 변경 시에만)
    ============================================ */
-let syncTimeout = null;
-let lastSyncTime = 0;
-const MIN_SYNC_INTERVAL = 100;
+let stateSyncTimeout = null;
+let positionsSyncTimeout = null;
+let lastStateSyncTime = 0;
+let lastPositionsSyncTime = 0;
+const STATE_MIN_INTERVAL = 600;     // 일반 상태: 0.6초당 최대 1회
+const POSITIONS_MIN_INTERVAL = 200; // 드래그 중 위치: 0.2초당 최대 1회
 let assetsDirty = false;
 
 function markAssetsDirty() {
     assetsDirty = true;
+}
+
+function collectPositions() {
+    const boardPiecesWithPosition = [];
+    document.querySelectorAll('.game-piece-on-board').forEach(el => {
+        boardPiecesWithPosition.push({
+            pieceId: el.dataset.pieceId,
+            uniqueId: el.dataset.uniqueId,
+            x: parseFloat(el.style.left) || 0,
+            y: parseFloat(el.style.top) || 0,
+        });
+    });
+
+    const boardSoldoutsWithPosition = [];
+    document.querySelectorAll('.soldout-on-board').forEach(el => {
+        boardSoldoutsWithPosition.push({
+            soldoutId: el.dataset.soldoutId,
+            x: parseFloat(el.style.left) || 0,
+            y: parseFloat(el.style.top) || 0,
+        });
+    });
+
+    return { boardPiecesWithPosition, boardSoldoutsWithPosition };
 }
 
 function buildAssetsPayload() {
@@ -854,61 +897,55 @@ function buildAssetsPayload() {
 }
 
 async function syncAssetsToFirebase() {
-    if (!assetsRef) {
-        return;
-    }
+    if (!assetsRef) return;
     try {
-        const payload = buildAssetsPayload();
-        await assetsRef.set(payload);
-        console.log('✅ Firebase 에셋 동기화 완료');
+        await assetsRef.set(buildAssetsPayload());
     } catch (error) {
         console.error('❌ Firebase 에셋 동기화 에러:', error);
     }
 }
 
-async function syncToFirebase() {
-    if (!gameStateRef) {
-        console.warn('⚠️ Firebase가 초기화되지 않았습니다');
-        return;
-    }
-    
+/**
+ * 위치만 가볍게 동기화 (드래그 중 호출).
+ * state 전체를 덮어쓰지 않으므로 viewer로 가는 페이로드가 매우 작음.
+ */
+async function syncPositionsToFirebase() {
+    if (!positionsRef) return;
+
     const now = Date.now();
-    if (now - lastSyncTime < MIN_SYNC_INTERVAL) {
-        if (syncTimeout) clearTimeout(syncTimeout);
-        syncTimeout = setTimeout(() => syncToFirebase(), MIN_SYNC_INTERVAL);
+    if (now - lastPositionsSyncTime < POSITIONS_MIN_INTERVAL) {
+        if (positionsSyncTimeout) clearTimeout(positionsSyncTimeout);
+        positionsSyncTimeout = setTimeout(syncPositionsToFirebase, POSITIONS_MIN_INTERVAL);
         return;
     }
-    
-    lastSyncTime = now;
-    
+    lastPositionsSyncTime = now;
+
     try {
-        const boardPiecesWithPosition = [];
-        document.querySelectorAll('.game-piece-on-board').forEach(el => {
-            const pieceId = el.dataset.pieceId;
-            const uniqueId = el.dataset.uniqueId;
-            const left = parseFloat(el.style.left) || 0;
-            const top = parseFloat(el.style.top) || 0;
-            boardPiecesWithPosition.push({
-                pieceId: pieceId,
-                uniqueId: uniqueId,
-                x: left,
-                y: top
-            });
+        const { boardPiecesWithPosition, boardSoldoutsWithPosition } = collectPositions();
+        await positionsRef.set({
+            boardPieces: boardPiecesWithPosition,
+            boardSoldouts: boardSoldoutsWithPosition,
+            hostSecret: 'bbokru_v3_secret_2024_1224',
         });
-        
-        const boardSoldoutsWithPosition = [];
-        document.querySelectorAll('.soldout-on-board').forEach(el => {
-            const soldoutId = el.dataset.soldoutId;
-            const left = parseFloat(el.style.left) || 0;
-            const top = parseFloat(el.style.top) || 0;
-            boardSoldoutsWithPosition.push({
-                soldoutId: soldoutId,
-                x: left,
-                y: top
-            });
-        });
-        
-        // state 전용 payload (이미지 제외!)
+    } catch (error) {
+        console.error('❌ Firebase 위치 동기화 에러:', error);
+    }
+}
+
+async function syncToFirebase() {
+    if (!gameStateRef) return;
+
+    const now = Date.now();
+    if (now - lastStateSyncTime < STATE_MIN_INTERVAL) {
+        if (stateSyncTimeout) clearTimeout(stateSyncTimeout);
+        stateSyncTimeout = setTimeout(syncToFirebase, STATE_MIN_INTERVAL);
+        return;
+    }
+    lastStateSyncTime = now;
+
+    try {
+        const { boardPiecesWithPosition, boardSoldoutsWithPosition } = collectPositions();
+
         const statePayload = {
             pieceCount: gameState.pieceCount,
             soldoutCount: gameState.soldoutCount,
@@ -916,27 +953,32 @@ async function syncToFirebase() {
             pieces: (gameState.pieces || []).map(p => ({
                 id: p.id,
                 name: p.name,
-                icon: p.icon
-                // image는 제외!
+                icon: p.icon,
             })),
             boardPieces: boardPiecesWithPosition,
             soldouts: (gameState.soldouts || []).map(s => ({
-                id: s.id
-                // image는 제외!
+                id: s.id,
             })),
             boardSoldouts: boardSoldoutsWithPosition,
             diceTheme: gameState.diceTheme,
             lastDiceRoll: gameState.lastDiceRoll,
             leftPanelHidden: gameState.leftPanelHidden,
             rightPanelHidden: gameState.rightPanelHidden,
-            hostSecret: 'bbokru_v3_secret_2024_1224'
-            // boardImage도 제외!
+            hostSecret: 'bbokru_v3_secret_2024_1224',
         };
-        
+
         await gameStateRef.set(statePayload);
-        console.log('✅ Firebase 상태 동기화 완료', new Date().toLocaleTimeString());
-        
-        // 이미지가 변경되었을 때만 assets 동기화
+
+        // positions도 같이 갱신 (drop 이후 캐시 일치)
+        if (positionsRef) {
+            await positionsRef.set({
+                boardPieces: boardPiecesWithPosition,
+                boardSoldouts: boardSoldoutsWithPosition,
+                hostSecret: 'bbokru_v3_secret_2024_1224',
+            });
+            lastPositionsSyncTime = Date.now();
+        }
+
         if (assetsDirty) {
             await syncAssetsToFirebase();
             assetsDirty = false;
@@ -947,7 +989,11 @@ async function syncToFirebase() {
 }
 
 async function syncImmediately() {
-    lastSyncTime = 0;
+    lastStateSyncTime = 0;
+    if (stateSyncTimeout) {
+        clearTimeout(stateSyncTimeout);
+        stateSyncTimeout = null;
+    }
     await syncToFirebase();
 }
 

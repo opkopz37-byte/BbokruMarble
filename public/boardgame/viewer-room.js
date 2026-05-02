@@ -4,12 +4,17 @@
 let database = null;
 let gameStateRef = null;
 let assetsRef = null;
+let positionsRef = null;
+let stateListener = null;
+let assetsListener = null;
+let positionsListener = null;
 
 try {
     firebase.initializeApp(FIREBASE_CONFIG);
     database = firebase.database();
     gameStateRef = database.ref('game/state');
     assetsRef = database.ref('game/assets');
+    positionsRef = database.ref('game/positions');
     console.log('✅ Firebase 초기화 완료 (관람 모드)');
 } catch (error) {
     console.error('❌ Firebase 초기화 실패:', error);
@@ -125,13 +130,26 @@ function updatePanelVisibility() {
 
 /* ============================================
    📡 Firebase 실시간 동기화
+   - state: 보드 구성/주사위 등 (드물게 변경)
+   - positions: 말/솔드아웃의 좌표 (드래그 시 자주 변경, 가벼움)
+   - assets: 이미지 (변경 시에만)
    ============================================ */
 let latestState = {};
 let latestAssets = {};
+let latestPositions = {};
+let renderQueued = false;
 
 function renderCombinedState() {
     const base = latestState || {};
     const combined = { ...base };
+
+    // 위치는 positions 채널이 우선 (드래그 시 실시간)
+    if (Array.isArray(latestPositions.boardPieces)) {
+        combined.boardPieces = latestPositions.boardPieces;
+    }
+    if (Array.isArray(latestPositions.boardSoldouts)) {
+        combined.boardSoldouts = latestPositions.boardSoldouts;
+    }
 
     // 에셋 쪽에 보드 이미지가 있으면 우선 사용
     if (latestAssets.boardImage) {
@@ -163,20 +181,66 @@ function renderCombinedState() {
     updateGameUI(combined);
 }
 
-if (gameStateRef) {
-    gameStateRef.on('value', (snapshot) => {
-        latestState = snapshot.val() || {};
-        console.log('🔄 게임 상태 업데이트 (state)', latestState);
+// 같은 프레임에 여러 채널이 도착해도 렌더는 한 번만
+function scheduleRender() {
+    if (renderQueued) return;
+    renderQueued = true;
+    requestAnimationFrame(() => {
+        renderQueued = false;
         renderCombinedState();
     });
 }
-if (assetsRef) {
-    assetsRef.on('value', (snapshot) => {
-        latestAssets = snapshot.val() || {};
-        console.log('🎨 에셋 상태 업데이트 (assets)', latestAssets);
-        renderCombinedState();
-    });
+
+function attachListeners() {
+    if (gameStateRef && !stateListener) {
+        stateListener = gameStateRef.on('value', (snapshot) => {
+            latestState = snapshot.val() || {};
+            scheduleRender();
+        });
+    }
+    if (assetsRef && !assetsListener) {
+        assetsListener = assetsRef.on('value', (snapshot) => {
+            latestAssets = snapshot.val() || {};
+            scheduleRender();
+        });
+    }
+    if (positionsRef && !positionsListener) {
+        positionsListener = positionsRef.on('value', (snapshot) => {
+            latestPositions = snapshot.val() || {};
+            scheduleRender();
+        });
+    }
 }
+
+function detachListeners() {
+    if (gameStateRef && stateListener) {
+        gameStateRef.off('value', stateListener);
+        stateListener = null;
+    }
+    if (assetsRef && assetsListener) {
+        assetsRef.off('value', assetsListener);
+        assetsListener = null;
+    }
+    if (positionsRef && positionsListener) {
+        positionsRef.off('value', positionsListener);
+        positionsListener = null;
+    }
+}
+
+attachListeners();
+
+// 페이지가 백그라운드로 가면 listener 해제 → 트래픽/비용 절약
+document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+        detachListeners();
+    } else {
+        attachListeners();
+    }
+});
+
+// 페이지 떠날 때 정리
+window.addEventListener('pagehide', detachListeners);
+window.addEventListener('beforeunload', detachListeners);
 
 function updateGameUI(gameState) {
     // 보드 이미지 업데이트
@@ -208,15 +272,11 @@ function updateGameUI(gameState) {
     // 주사위 결과 업데이트 - 값이 바뀔 때만 애니메이션과 소리 재생
     if (gameState.lastDiceRoll) {
         document.getElementById('diceResult').textContent = `결과: ${gameState.lastDiceRoll}`;
-        
-        // 🎯 새로운 주사위 결과일 때만 애니메이션과 소리 재생
+
         if (lastDiceRoll !== gameState.lastDiceRoll) {
-            console.log('🎲 새로운 주사위 결과:', gameState.lastDiceRoll);
             lastDiceRoll = gameState.lastDiceRoll;
             showDiceFace(gameState.lastDiceRoll);
         } else {
-            // 이미 표시된 결과면 애니메이션과 소리 없이 주사위 면만 표시
-            console.log('📌 이미 표시된 주사위 결과:', gameState.lastDiceRoll);
             showDiceFaceQuietly(gameState.lastDiceRoll);
         }
     }
@@ -344,40 +404,35 @@ function showDiceFaceQuietly(number) {
 }
 
 /* ============================================
-   🔊 소리 재생 함수들
+   🔊 소리 재생 함수들 (Audio 객체 풀로 재사용)
    ============================================ */
-function playRollSound(theme) {
-    console.log('🎲 주사위 굴리는 소리 재생 시도:', theme);
-    if (!diceThemes[theme]) {
-        console.error('❌ 테마가 존재하지 않음:', theme);
-        return;
+const audioCache = new Map();
+
+function getAudio(src) {
+    let audio = audioCache.get(src);
+    if (!audio) {
+        audio = new Audio(src);
+        audio.preload = 'auto';
+        audioCache.set(src, audio);
     }
-    console.log('🔊 소리 파일:', diceThemes[theme].rollSound);
-    const sound = new Audio(diceThemes[theme].rollSound);
+    return audio;
+}
+
+function playRollSound(theme) {
+    if (!diceThemes[theme]) return;
+    const sound = getAudio(diceThemes[theme].rollSound);
     sound.volume = 0.7;
     sound.currentTime = 0;
-    sound.play()
-        .then(() => console.log('✅ 주사위 소리 재생 성공'))
-        .catch(err => {
-            console.error('🔇 주사위 굴리기 소리 재생 실패:', err);
-        });
+    sound.play().catch(() => {});
 }
 
 function speakNumber(number, theme) {
-    console.log('🔢 숫자 음성 재생 시도:', number, theme);
-    if (!diceThemes[theme] || !diceThemes[theme].voices[number]) {
-        console.error('❌ 음성이 존재하지 않음:', theme, number);
-        return;
-    }
-    console.log('🔊 음성 파일:', diceThemes[theme].voices[number]);
-    const voice = new Audio(diceThemes[theme].voices[number]);
+    if (!diceThemes[theme] || !diceThemes[theme].voices[number]) return;
+    const voice = getAudio(diceThemes[theme].voices[number]);
     voice.volume = 0.8;
     setTimeout(() => {
-        voice.play()
-            .then(() => console.log('✅ 숫자 음성 재생 성공'))
-            .catch(err => {
-                console.error('🔇 숫자 음성 재생 실패:', err);
-            });
+        voice.currentTime = 0;
+        voice.play().catch(() => {});
     }, 600);
 }
 
