@@ -1,12 +1,13 @@
 .header {
-  background: rgba(255, 254, 245, 0.85);
+  background: rgba(255, 254, 245, 0.92);
   border-bottom: 2px solid var(--black);
-  padding: 16px 0;
+  padding: 12px 0;
+  padding-top: max(12px, env(safe-area-inset-top));
   position: sticky;
   top: 0;
   z-index: 100;
-  backdrop-filter: blur(12px) saturate(120%);
-  -webkit-backdrop-filter: blur(12px) saturate(120%);
+  /* backdrop-filter는 sticky 요소에서 매 스크롤 프레임마다 재계산되어 비용 큼.
+     불투명도 높여서 시각적으로 비슷하게 처리. */
 }
 
 .inner {
@@ -97,4 +98,53 @@
     padding: 8px 14px;
     font-size: 0.75rem;
   }
+}
+
+/* ============ ON-AIR DARK THEME OVERRIDES ============ */
+:global(body.themeDark) .header {
+  background: rgba(22, 16, 13, 0.92);
+  border-bottom: 1px solid var(--border-warm);
+}
+
+:global(body.themeDark) .brand {
+  color: var(--text-cream);
+}
+
+:global(body.themeDark) .brandMark {
+  background: var(--gold);
+  border: 1px solid var(--gold);
+  border-radius: 50%;
+  width: 10px;
+  height: 10px;
+  box-shadow: 0 0 12px rgba(212, 163, 115, 0.6);
+}
+
+:global(body.themeDark) .brandText {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 500;
+  font-size: 1.15rem;
+  letter-spacing: 0.02em;
+  color: var(--text-cream);
+}
+
+:global(body.themeDark) .navLink {
+  color: var(--text-cream-muted);
+  font-weight: 500;
+  font-size: 0.78rem;
+  letter-spacing: 0.22em;
+}
+
+:global(body.themeDark) .navLink:hover {
+  color: var(--gold-bright);
+}
+
+:global(body.themeDark) .navLinkActive {
+  color: var(--gold-bright);
+}
+
+:global(body.themeDark) .navActiveBg {
+  background: transparent;
+  border: 1px solid var(--gold);
+  box-shadow: none;
 }

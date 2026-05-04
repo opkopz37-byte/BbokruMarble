@@ -1,14 +1,17 @@
 .page {
   width: 100%;
   min-height: calc(100vh - 70px);
-  padding: 20px 16px 30px;
+  min-height: calc(100dvh - 70px);
+  padding: 20px 18px 24px;
+  padding-bottom: max(24px, env(safe-area-inset-bottom));
   display: flex;
   flex-direction: column;
   gap: 18px;
   background:
-    radial-gradient(ellipse at 50% 30%, rgba(255, 215, 0, 0.18), transparent 60%),
-    radial-gradient(ellipse at 50% 90%, rgba(255, 184, 217, 0.12), transparent 60%),
-    var(--pale-yellow);
+    radial-gradient(ellipse at 50% 20%, rgba(212, 163, 115, 0.12), transparent 55%),
+    radial-gradient(ellipse at 50% 90%, rgba(184, 139, 94, 0.08), transparent 60%),
+    var(--bg-deep);
+  color: var(--text-cream);
   position: relative;
 }
 
@@ -27,24 +30,24 @@
 .exitBtn {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  font-weight: 900;
-  font-size: 0.85rem;
-  letter-spacing: 0.06em;
-  color: var(--black);
-  padding: 8px 16px;
-  border: 2px solid var(--black);
-  background: var(--white);
+  gap: 8px;
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 0.78rem;
+  letter-spacing: 0.18em;
+  color: var(--text-cream-muted);
+  padding: 10px 18px;
+  border: 1px solid var(--border-warm);
+  background: rgba(34, 24, 20, 0.4);
   border-radius: 100px;
-  box-shadow: 3px 3px 0 var(--black);
-  font-family: inherit;
   cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: color 0.25s ease, border-color 0.25s ease, background 0.25s ease;
 }
 
 .exitBtn:hover {
-  transform: translate(-2px, -2px);
-  box-shadow: 5px 5px 0 var(--black);
+  color: var(--gold-bright);
+  border-color: var(--border-warm-strong);
+  background: rgba(34, 24, 20, 0.7);
 }
 
 .topInfo {
@@ -58,26 +61,35 @@
 .statusBadge,
 .aliveBadge {
   display: inline-block;
-  font-family: var(--font-display);
+  font-family: var(--font-serif);
+  font-style: italic;
   font-size: 0.85rem;
-  letter-spacing: 0.04em;
-  padding: 6px 12px;
-  border: 2px solid var(--black);
+  letter-spacing: 0.02em;
+  padding: 6px 14px;
+  border: 1px solid var(--border-warm);
   border-radius: 100px;
-  box-shadow: 2px 2px 0 var(--black);
 }
 
 .roundBadge {
-  background: var(--black);
-  color: var(--primary-yellow);
+  background: transparent;
+  color: var(--gold-bright);
+  border-color: var(--gold-soft);
+  font-family: var(--font-body);
+  font-style: normal;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  font-size: 0.72rem;
 }
 
 .statusBadge {
-  background: var(--white);
+  background: transparent;
+  color: var(--text-cream-muted);
 }
 
 .aliveBadge {
-  background: var(--primary-yellow);
+  background: transparent;
+  color: var(--text-cream);
+  border-color: var(--gold-soft);
 }
 
 /* ==================== HOST SEAT ==================== */
@@ -98,9 +110,11 @@
 }
 
 .loader {
-  font-weight: 900;
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 400;
   font-size: 1.05rem;
-  color: var(--gray-500);
+  color: var(--text-cream-muted);
 }
 
 .stageMessage {
@@ -108,11 +122,12 @@
 }
 
 .stageHint {
-  font-family: var(--font-display);
-  font-size: clamp(1.1rem, 2.6vw, 1.6rem);
+  font-family: var(--font-serif-kr);
+  font-weight: 500;
+  font-size: clamp(1.1rem, 2.6vw, 1.55rem);
   letter-spacing: -0.01em;
-  color: var(--gray-700);
-  line-height: 1.4;
+  color: var(--text-cream);
+  line-height: 1.5;
   max-width: 32ch;
   margin: 0 auto;
 }
@@ -122,27 +137,29 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 14px;
+  gap: 16px;
 }
 
 .countdownLabel {
-  font-weight: 900;
-  font-size: 0.85rem;
-  letter-spacing: 0.16em;
-  color: var(--gray-500);
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 0.95rem;
+  letter-spacing: 0.04em;
+  color: var(--gold-bright);
 }
 
 .countdownNumber {
-  font-family: var(--font-display);
+  font-family: var(--font-serif);
+  font-weight: 500;
   font-size: clamp(5rem, 16vw, 9rem);
   line-height: 1;
-  letter-spacing: -0.04em;
-  color: var(--black);
-  background: var(--primary-yellow);
-  border: 4px solid var(--black);
-  border-radius: 24px;
+  letter-spacing: -0.02em;
+  color: var(--gold-bright);
+  background: var(--bg-card);
+  border: 1px solid var(--gold);
+  border-radius: 18px;
   padding: 18px 44px;
-  box-shadow: 8px 8px 0 var(--black);
+  box-shadow: 0 24px 56px -16px rgba(212, 163, 115, 0.4);
 }
 
 /* RESULT BANNER */
@@ -151,39 +168,44 @@
   justify-content: center;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
 }
 
 .resultHostPick {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  font-family: var(--font-display);
-  font-size: clamp(0.95rem, 2vw, 1.15rem);
-  padding: 8px 18px;
-  border: 2.5px solid var(--black);
+  gap: 8px;
+  font-family: var(--font-serif-kr);
+  font-weight: 500;
+  font-size: clamp(0.95rem, 2vw, 1.1rem);
+  padding: 10px 20px;
+  border: 1px solid var(--border-warm);
   border-radius: 100px;
-  background: var(--white);
-  box-shadow: 3px 3px 0 var(--black);
+  background: var(--bg-card);
+  color: var(--text-cream);
 }
 
 .resultBadge,
 .resultBadgePink {
   display: inline-block;
-  font-family: var(--font-display);
-  font-size: clamp(1rem, 2.4vw, 1.4rem);
-  padding: 10px 22px;
-  border: 3px solid var(--black);
+  font-family: var(--font-serif-kr);
+  font-weight: 500;
+  font-size: clamp(1rem, 2.2vw, 1.3rem);
+  padding: 12px 24px;
   border-radius: 100px;
-  box-shadow: 4px 4px 0 var(--black);
+  border: 1px solid;
 }
 
 .resultBadge {
-  background: var(--primary-yellow);
+  background: transparent;
+  color: var(--gold-bright);
+  border-color: var(--gold);
 }
 
 .resultBadgePink {
-  background: var(--pink);
+  background: transparent;
+  color: #e8a299;
+  border-color: #c97a6e;
 }
 
 /* WINNER STAGE */
@@ -191,14 +213,14 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   text-align: center;
-  background: var(--black);
-  color: var(--pale-yellow);
-  border: 4px solid var(--black);
-  border-radius: 28px;
-  padding: 36px 30px;
-  box-shadow: 10px 10px 0 var(--primary-yellow), 10px 10px 0 2px var(--black);
+  background: var(--bg-card);
+  color: var(--text-cream);
+  border: 1px solid var(--border-warm-strong);
+  border-radius: 22px;
+  padding: 40px 32px;
+  box-shadow: 0 30px 60px -20px rgba(0, 0, 0, 0.7);
   max-width: 520px;
   width: 92%;
 }
@@ -206,28 +228,32 @@
 .winnerCrown {
   font-size: clamp(3.5rem, 10vw, 5.5rem);
   line-height: 1;
-  filter: drop-shadow(3px 3px 0 var(--primary-yellow));
+  filter: drop-shadow(0 0 28px rgba(212, 163, 115, 0.55));
 }
 
 .winnerLabel {
-  font-weight: 900;
-  font-size: 0.85rem;
-  letter-spacing: 0.22em;
-  color: var(--primary-yellow);
+  font-family: var(--font-script);
+  font-size: clamp(2.2rem, 4vw, 3.2rem);
+  letter-spacing: 0;
+  color: var(--gold-bright);
+  line-height: 1;
 }
 
 .winnerName {
-  font-family: var(--font-display);
+  font-family: var(--font-serif-kr);
+  font-weight: 500;
   font-size: clamp(2rem, 6.5vw, 3.4rem);
-  letter-spacing: -0.02em;
+  letter-spacing: -0.01em;
   line-height: 1;
-  color: var(--primary-yellow);
+  color: var(--text-cream);
 }
 
 .winnerSub {
+  font-family: var(--font-serif);
+  font-style: italic;
   font-size: 0.95rem;
-  font-weight: 700;
-  color: #ddd;
+  font-weight: 400;
+  color: var(--text-cream-muted);
   margin-top: 8px;
 }
 
@@ -250,44 +276,43 @@
   flex-direction: column;
   align-items: center;
   gap: 8px;
-  padding: 12px 10px;
-  background: var(--white);
-  border: 2.5px solid var(--black);
-  border-radius: 18px;
-  box-shadow: 4px 4px 0 var(--black);
+  padding: 14px 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-warm);
+  border-radius: 14px;
   min-width: 110px;
   max-width: 140px;
   position: relative;
-  transition: opacity 0.3s ease, transform 0.3s ease;
+  transition: opacity 0.3s ease, transform 0.3s ease, border-color 0.3s ease;
 }
 
 .seatBig {
-  padding: 18px 20px;
+  padding: 20px 22px;
   min-width: 200px;
-  border-width: 3px;
-  border-radius: 24px;
-  box-shadow: 6px 6px 0 var(--black);
+  border-radius: 18px;
+  border-color: var(--border-warm-strong);
 }
 
 .seatMe {
-  background: var(--pale-yellow);
+  background: var(--bg-card-2);
+  border-color: var(--gold-soft);
 }
 
 .seatHost {
-  background: var(--black);
-  color: var(--pale-yellow);
-  border-color: var(--black);
-  box-shadow: 6px 6px 0 var(--primary-yellow), 6px 6px 0 2px var(--black);
+  background: var(--bg-card-2);
+  color: var(--text-cream);
+  border-color: var(--gold);
+  box-shadow: 0 14px 36px -12px rgba(212, 163, 115, 0.35);
 }
 
 .seatKO {
-  opacity: 0.5;
-  background: #efe9d6;
+  opacity: 0.45;
+  filter: grayscale(0.4);
 }
 
 .seatJustKO {
-  border-color: var(--pink);
-  box-shadow: 4px 4px 0 var(--pink);
+  border-color: #c97a6e;
+  box-shadow: 0 0 24px -4px rgba(201, 122, 110, 0.5);
   animation: shakeKO 0.4s ease;
 }
 
@@ -298,23 +323,23 @@
 }
 
 .seatJustSurvive {
-  border-color: #2cb673;
-  box-shadow: 4px 4px 0 #2cb673;
+  border-color: #8fb88a;
+  box-shadow: 0 0 24px -4px rgba(143, 184, 138, 0.4);
 }
 
 .seatWinner {
-  background: var(--primary-yellow);
-  border-color: var(--black);
-  animation: winnerGlow 1.2s ease-in-out infinite;
+  background: rgba(212, 163, 115, 0.12);
+  border-color: var(--gold);
+  animation: winnerGlow 1.6s ease-in-out infinite;
 }
 
 @keyframes winnerGlow {
   0%, 100% {
-    box-shadow: 4px 4px 0 var(--black);
+    box-shadow: 0 0 24px -4px rgba(212, 163, 115, 0.4);
     transform: translateY(0);
   }
   50% {
-    box-shadow: 6px 6px 0 var(--black);
+    box-shadow: 0 0 36px -2px rgba(236, 194, 148, 0.6);
     transform: translateY(-3px);
   }
 }
@@ -332,7 +357,7 @@
 }
 
 .seatBadge {
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   line-height: 1;
 }
 
@@ -341,23 +366,26 @@
 }
 
 .seatName {
-  font-family: var(--font-display);
+  font-family: var(--font-serif-kr);
+  font-weight: 500;
   font-size: 0.92rem;
   letter-spacing: 0;
   text-align: center;
   word-break: break-all;
   line-height: 1.2;
+  color: var(--text-cream);
 }
 
 .seatBig .seatName {
-  font-size: 1.2rem;
+  font-size: 1.15rem;
 }
 
 .meDot {
-  font-family: var(--font-body);
-  font-weight: 700;
-  font-size: 0.8em;
-  opacity: 0.7;
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 400;
+  font-size: 0.85em;
+  color: var(--gold-bright);
 }
 
 .seatCardSlot {
@@ -393,21 +421,21 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 10px;
-  border: 2.5px solid var(--black);
-  box-shadow: 3px 3px 0 var(--black);
+  border-radius: 8px;
+  border: 1px solid var(--border-warm-strong);
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
 }
 
 .miniCardFront {
-  background: var(--white);
+  background: var(--bg-deep);
 }
 
 .miniCardBack {
-  background: var(--primary-yellow);
+  background: var(--bg-card-2);
   background-image:
-    repeating-linear-gradient(45deg, transparent, transparent 6px, rgba(0,0,0,0.08) 6px, rgba(0,0,0,0.08) 8px);
+    repeating-linear-gradient(45deg, transparent, transparent 6px, rgba(212, 163, 115, 0.08) 6px, rgba(212, 163, 115, 0.08) 8px);
+  border-color: var(--gold-soft);
   transform: rotateY(180deg);
 }
 
@@ -415,16 +443,16 @@
   position: relative;
   background: transparent;
   border-style: dashed;
-  border-color: var(--gray-400);
-  box-shadow: none;
+  border-color: var(--border-warm);
   width: 100%;
   height: 100%;
 }
 
 .miniCardSlash {
-  font-family: var(--font-display);
+  font-family: var(--font-serif);
+  font-style: italic;
   font-size: 1.4rem;
-  color: var(--gray-400);
+  color: var(--text-cream-faded);
 }
 
 .miniCardEmoji {
@@ -437,9 +465,11 @@
 }
 
 .miniCardBackMark {
-  font-family: var(--font-display);
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 500;
   font-size: 1.8rem;
-  color: var(--black);
+  color: var(--gold-bright);
 }
 
 .seatBig .miniCardBackMark {
@@ -447,11 +477,11 @@
 }
 
 .seatStatus {
-  font-weight: 900;
+  font-family: var(--font-body);
+  font-weight: 500;
   font-size: 0.7rem;
-  letter-spacing: 0.08em;
-  color: inherit;
-  opacity: 0.85;
+  letter-spacing: 0.16em;
+  color: var(--text-cream-faded);
 }
 
 .seatBig .seatStatus {
@@ -461,21 +491,22 @@
 /* ==================== MY HAND ==================== */
 .myHand {
   margin-top: auto;
-  padding: 24px 16px 12px;
-  border-top: 2px dashed var(--black);
+  padding: 26px 16px 12px;
+  border-top: 1px solid var(--border-warm);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 14px;
-  background: rgba(255, 254, 245, 0.6);
-  border-radius: 28px 28px 0 0;
+  gap: 16px;
+  background: rgba(34, 24, 20, 0.5);
+  border-radius: 20px 20px 0 0;
 }
 
 .myHandLabel {
-  font-weight: 900;
-  font-size: 0.78rem;
-  letter-spacing: 0.18em;
-  color: var(--gray-500);
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 0.95rem;
+  letter-spacing: 0.04em;
+  color: var(--gold-bright);
 }
 
 .cards {
@@ -491,28 +522,32 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: 12px;
   padding: 22px 8px 18px;
-  background: var(--white);
-  border: 3px solid var(--black);
-  border-radius: 22px;
-  box-shadow: 5px 5px 0 var(--black);
-  font-family: inherit;
+  background: var(--bg-card);
+  border: 1px solid var(--border-warm);
+  border-radius: 16px;
+  font-family: var(--font-body);
   cursor: pointer;
-  transition: background 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease, opacity 0.25s ease;
+  transition: background 0.25s ease, border-color 0.25s ease,
+    transform 0.25s ease, opacity 0.25s ease, box-shadow 0.25s ease;
   aspect-ratio: 0.78;
   min-height: 130px;
   position: relative;
 }
 
+.handCard:hover {
+  border-color: var(--gold-soft);
+}
+
 .handCardSelected {
-  background: var(--primary-yellow);
-  box-shadow: 7px 7px 0 var(--black);
-  transform: translate(-2px, -2px);
+  background: rgba(212, 163, 115, 0.15);
+  border-color: var(--gold);
+  box-shadow: 0 14px 32px -12px rgba(212, 163, 115, 0.4);
 }
 
 .handCardDim {
-  opacity: 0.35;
+  opacity: 0.3;
 }
 
 .handCard:disabled {
@@ -522,13 +557,15 @@
 .handCardEmoji {
   font-size: clamp(2.8rem, 8vw, 4rem);
   line-height: 1;
-  filter: drop-shadow(2px 2px 0 rgba(0, 0, 0, 0.15));
+  filter: drop-shadow(0 0 16px rgba(212, 163, 115, 0.25));
 }
 
 .handCardLabel {
-  font-family: var(--font-display);
-  font-size: clamp(1rem, 2.4vw, 1.4rem);
+  font-family: var(--font-serif-kr);
+  font-weight: 500;
+  font-size: clamp(1rem, 2.2vw, 1.25rem);
   letter-spacing: 0;
+  color: var(--text-cream);
 }
 
 /* ==================== HOST CONTROLS ==================== */
@@ -545,68 +582,296 @@
   display: inline-flex;
   align-items: center;
   gap: 12px;
-  background: var(--black);
-  color: var(--primary-yellow);
-  padding: 16px 34px;
-  border: 3px solid var(--black);
+  background: var(--gold);
+  color: var(--bg-deep);
+  padding: 16px 36px;
+  border: none;
   border-radius: 100px;
-  font-weight: 900;
-  font-size: 0.95rem;
-  letter-spacing: 0.06em;
-  box-shadow: 5px 5px 0 var(--primary-yellow), 5px 5px 0 2px var(--black);
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
-  font-family: inherit;
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 0.92rem;
+  letter-spacing: 0.14em;
+  box-shadow: 0 16px 40px -12px rgba(212, 163, 115, 0.5);
   cursor: pointer;
+  transition: background 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
 }
 
 .primaryBtn:hover:not(:disabled) {
-  transform: translate(-2px, -2px);
-  box-shadow: 7px 7px 0 var(--primary-yellow), 7px 7px 0 2px var(--black);
+  background: var(--gold-bright);
+  transform: translateY(-2px);
+  box-shadow: 0 22px 48px -12px rgba(236, 194, 148, 0.6);
 }
 
 .primaryBtn:disabled {
-  opacity: 0.5;
+  opacity: 0.4;
   cursor: not-allowed;
-  background: var(--gray-700);
-  box-shadow: 5px 5px 0 var(--gray-400), 5px 5px 0 2px var(--gray-700);
+  background: var(--bg-card-2);
+  color: var(--text-cream-faded);
+  box-shadow: none;
 }
 
 /* ==================== RESPONSIVE ==================== */
 @media (max-width: 600px) {
   .page {
-    padding: 14px 12px 24px;
+    padding: 14px 12px 20px;
     gap: 14px;
   }
+  .roundBadge,
+  .statusBadge,
+  .aliveBadge {
+    font-size: 0.72rem;
+    padding: 5px 11px;
+  }
+  .topInfo {
+    gap: 6px;
+  }
+  .exitBtn {
+    padding: 8px 14px;
+    font-size: 0.72rem;
+    letter-spacing: 0.14em;
+  }
+  .center {
+    min-height: 90px;
+    padding: 10px 0;
+  }
+  .stageHint {
+    font-size: clamp(1rem, 4.5vw, 1.3rem);
+  }
+  .countdownNumber {
+    font-size: clamp(4rem, 16vw, 7rem);
+    padding: 14px 32px;
+    border-radius: 14px;
+  }
+  .resultHostPick {
+    font-size: 0.92rem;
+    padding: 8px 16px;
+  }
+  .resultBadge,
+  .resultBadgePink {
+    font-size: 1rem;
+    padding: 10px 20px;
+  }
+  .winnerStage {
+    padding: 28px 22px;
+    border-radius: 18px;
+    gap: 8px;
+  }
+  .winnerCrown {
+    font-size: clamp(2.8rem, 12vw, 4rem);
+  }
+  .winnerLabel {
+    font-size: clamp(1.8rem, 6vw, 2.4rem);
+  }
+  .winnerName {
+    font-size: clamp(1.7rem, 7vw, 2.6rem);
+  }
+  .playersRow {
+    gap: 8px;
+    padding: 8px 0;
+  }
   .seat {
-    min-width: 95px;
-    max-width: 110px;
-    padding: 10px 6px;
+    min-width: 88px;
+    max-width: 105px;
+    padding: 10px 8px;
+    gap: 6px;
+  }
+  .seatBig {
+    min-width: 170px;
+    padding: 16px 18px;
   }
   .seatCardSlot {
-    width: 52px;
-    height: 72px;
+    width: 50px;
+    height: 70px;
+  }
+  .seatBig .seatCardSlot {
+    width: 80px;
+    height: 112px;
   }
   .miniCardEmoji {
     font-size: 1.5rem;
   }
+  .seatBig .miniCardEmoji {
+    font-size: 2.4rem;
+  }
   .miniCardBackMark {
-    font-size: 1.5rem;
+    font-size: 1.4rem;
+  }
+  .seatBig .miniCardBackMark {
+    font-size: 2.2rem;
+  }
+  .seatName {
+    font-size: 0.84rem;
+  }
+  .seatBig .seatName {
+    font-size: 1.05rem;
+  }
+  .seatStatus {
+    font-size: 0.62rem;
+  }
+  .myHand {
+    padding: 18px 12px 8px;
+    gap: 12px;
+    border-radius: 16px 16px 0 0;
+  }
+  .myHandLabel {
+    font-size: 0.85rem;
+  }
+  .cards {
+    gap: 10px;
   }
   .handCard {
-    min-height: 110px;
-    padding: 18px 6px 14px;
-    border-radius: 18px;
+    min-height: 100px;
+    padding: 16px 6px 12px;
+    border-radius: 12px;
+    gap: 8px;
   }
-  .countdownNumber {
-    padding: 14px 32px;
-    border-radius: 18px;
+  .handCardEmoji {
+    font-size: clamp(2.2rem, 9vw, 2.8rem);
   }
-  .winnerStage {
-    padding: 28px 22px;
-    border-radius: 22px;
+  .handCardLabel {
+    font-size: 0.95rem;
   }
   .primaryBtn {
-    padding: 14px 28px;
-    font-size: 0.9rem;
+    padding: 13px 26px;
+    font-size: 0.82rem;
+  }
+  .controls {
+    bottom: max(12px, env(safe-area-inset-bottom));
+  }
+}
+
+/* 폰 가로 — 호스트 좌석 좌측 / 가운데 스테이지 / 우측 플레이어로 3단 */
+@media (max-width: 900px) and (orientation: landscape) {
+  .page {
+    padding: 10px 14px 14px;
+    padding-bottom: max(14px, env(safe-area-inset-bottom));
+    gap: 10px;
+  }
+  .topBar {
+    gap: 8px;
+  }
+  .roundBadge,
+  .statusBadge,
+  .aliveBadge {
+    font-size: 0.7rem;
+    padding: 4px 10px;
+  }
+  .exitBtn {
+    padding: 7px 14px;
+    font-size: 0.72rem;
+  }
+  .hostSeat {
+    padding: 4px 0;
+  }
+  .seatBig {
+    padding: 12px 16px;
+    min-width: 160px;
+  }
+  .seatBig .seatCardSlot {
+    width: 60px;
+    height: 84px;
+  }
+  .seatBig .miniCardEmoji {
+    font-size: 1.9rem;
+  }
+  .seatBig .miniCardBackMark {
+    font-size: 1.7rem;
+  }
+  .seatBig .seatName {
+    font-size: 0.95rem;
+  }
+  .center {
+    min-height: 60px;
+    padding: 6px 0;
+  }
+  .stageHint {
+    font-size: 1rem;
+  }
+  .countdownNumber {
+    font-size: clamp(2.8rem, 9vh, 5rem);
+    padding: 8px 28px;
+    border-radius: 12px;
+  }
+  .countdownLabel {
+    font-size: 0.85rem;
+  }
+  .winnerStage {
+    padding: 18px 24px;
+    gap: 4px;
+    max-width: 480px;
+  }
+  .winnerCrown {
+    font-size: clamp(2rem, 9vh, 3.4rem);
+  }
+  .winnerLabel {
+    font-size: clamp(1.5rem, 5vh, 2.2rem);
+  }
+  .winnerName {
+    font-size: clamp(1.4rem, 6vh, 2.4rem);
+  }
+  .winnerSub {
+    font-size: 0.85rem;
+    margin-top: 4px;
+  }
+  .playersRow {
+    gap: 6px;
+    padding: 4px 0;
+  }
+  .seat {
+    min-width: 78px;
+    max-width: 95px;
+    padding: 8px 6px;
+    gap: 4px;
+  }
+  .seatCardSlot {
+    width: 40px;
+    height: 56px;
+  }
+  .miniCardEmoji {
+    font-size: 1.2rem;
+  }
+  .miniCardBackMark {
+    font-size: 1.1rem;
+  }
+  .seatName {
+    font-size: 0.78rem;
+  }
+  .seatStatus {
+    font-size: 0.58rem;
+  }
+  .myHand {
+    padding: 12px 14px 6px;
+    gap: 8px;
+    border-radius: 14px 14px 0 0;
+  }
+  .myHandLabel {
+    font-size: 0.8rem;
+  }
+  .cards {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    max-width: 460px;
+  }
+  .handCard {
+    aspect-ratio: 1.2;
+    min-height: 0;
+    padding: 10px 6px 8px;
+    border-radius: 12px;
+    gap: 6px;
+  }
+  .handCardEmoji {
+    font-size: clamp(1.7rem, 7vh, 2.4rem);
+  }
+  .handCardLabel {
+    font-size: 0.85rem;
+  }
+  .controls {
+    bottom: max(8px, env(safe-area-inset-bottom));
+    margin-top: 4px;
+  }
+  .primaryBtn {
+    padding: 11px 22px;
+    font-size: 0.78rem;
+    letter-spacing: 0.12em;
   }
 }

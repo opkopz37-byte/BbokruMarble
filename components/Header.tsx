@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect } from "react";
 import { motion } from "motion/react";
 import styles from "./Header.module.css";
 
@@ -10,8 +11,24 @@ const navItems = [
   { href: "/games", label: "GAMES" },
 ];
 
+const DARK_ROUTES = [
+  "/",
+  "/games",
+];
+
 export default function Header() {
   const pathname = usePathname();
+  const isDark = DARK_ROUTES.some(
+    (r) => r === pathname || (r !== "/" && pathname.startsWith(r)),
+  );
+
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    document.body.classList.toggle("themeDark", isDark);
+    return () => {
+      document.body.classList.remove("themeDark");
+    };
+  }, [isDark]);
 
   return (
     <motion.header

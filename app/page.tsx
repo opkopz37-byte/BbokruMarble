@@ -1,161 +1,135 @@
 "use client";
 
 import Link from "next/link";
-import { motion, useScroll, useTransform } from "motion/react";
-import { useRef } from "react";
-import Marquee from "@/components/Marquee";
-import SplitChars from "@/components/SplitChars";
+import Image from "next/image";
+import { motion } from "motion/react";
 import Magnetic from "@/components/Magnetic";
-import SectionLabel from "@/components/SectionLabel";
 import { games } from "@/lib/games";
 import styles from "./page.module.css";
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
 export default function Home() {
-  const heroRef = useRef<HTMLDivElement>(null);
-  const { scrollYProgress: heroProgress } = useScroll({
-    target: heroRef,
-    offset: ["start start", "end start"],
-  });
-  const heroY = useTransform(heroProgress, [0, 1], [0, -120]);
-  const heroOpacity = useTransform(heroProgress, [0, 0.7], [1, 0]);
-
   return (
     <div className={styles.page}>
       {/* ============ HERO ============ */}
-      <section className={styles.hero} ref={heroRef}>
-        <div className={styles.heroBg} aria-hidden />
-        <span className={`${styles.deco} ${styles.decoCircle}`} aria-hidden />
-
-        <motion.div
-          className={styles.heroTop}
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease, delay: 0.1 }}
-        >
-          <span className={styles.heroLabel}>
-            EST. 2026 — REAL-TIME MINI GAMES
-          </span>
-        </motion.div>
-
-        <motion.h1
-          className={styles.heroTitle}
-          style={{ y: heroY, opacity: heroOpacity }}
-        >
-          <span className={styles.titleLine}>
-            <SplitChars text="뽀그네" delay={0.2} stagger={0.06} />
-          </span>
-          <span className={styles.titleLine}>
-            <SplitChars text="게임 스튜디오." delay={0.5} stagger={0.045} />
-          </span>
-        </motion.h1>
-
-        <motion.div
-          className={styles.heroFoot}
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1, ease, delay: 1.1 }}
-        >
-          <p className={styles.tagline}>
-            친구들과 함께 즐기는<br />
-            <strong>실시간 미니게임 모음.</strong>
-          </p>
-          <Magnetic strength={0.3}>
-            <Link href="/games" className={styles.cta}>
-              <span>게임 보러가기</span>
-              <span className={styles.ctaArrow} aria-hidden>→</span>
-            </Link>
-          </Magnetic>
-        </motion.div>
-
-        <motion.div
-          className={styles.scrollHint}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1.6, duration: 1 }}
-        >
-          <span>SCROLL</span>
+      <section className={styles.hero}>
+        <div className={styles.heroGrid}>
           <motion.div
-            className={styles.scrollBar}
-            animate={{ scaleY: [0, 1, 0] }}
-            transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
-          />
-        </motion.div>
-      </section>
+            className={styles.heroImageWrap}
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1.1, ease }}
+          >
+            <Image
+              src="/hero-on-air.png"
+              alt="On Air — 뽀그네 게임 스튜디오"
+              width={1254}
+              height={1254}
+              className={styles.heroImage}
+              priority
+            />
+            <div className={styles.heroImageGlow} aria-hidden />
+          </motion.div>
 
-      {/* ============ MARQUEE (single line) ============ */}
-      <Marquee
-        items={["GAMES", "COMMUNITY", "REAL-TIME", "TOGETHER", "FUN", "PLAY", "BBOGRENE STUDIO"]}
-        duration={32}
-      />
+          <motion.aside
+            className={styles.heroSide}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1.1, ease, delay: 0.15 }}
+          >
+            <p className={styles.eyebrow}>Tonight&apos;s Games</p>
+            <h2 className={styles.sideTitle}>
+              오늘 함께 <em>플레이할</em> 게임
+            </h2>
 
-      {/* ============ 01 PHILOSOPHY ============ */}
-      <section className={styles.philosophy}>
-        <span className={styles.bgNum} aria-hidden>01</span>
-        <SectionLabel index="01" label="/ PHILOSOPHY" />
-        <motion.p
-          className={styles.philosophyText}
-          initial={{ opacity: 0, y: 50 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.3 }}
-          transition={{ duration: 1, ease }}
-        >
-          가벼운 마음으로,<br />
-          <span className={styles.highlight}>그러나 진심으로</span><br />
-          노는 사람들을 위한 공간.
-        </motion.p>
-      </section>
+            <ol className={styles.tracklist}>
+              {games.map((g, i) => (
+                <motion.li
+                  key={g.slug}
+                  className={styles.track}
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.7, ease, delay: 0.4 + i * 0.08 }}
+                >
+                  <span className={styles.trackNum}>
+                    {String(i + 1).padStart(2, "0")}.
+                  </span>
+                  <Link href={`/games/${g.slug}`} className={styles.trackLink}>
+                    <span className={styles.trackTitle}>
+                      {g.title}
+                      {!g.available && (
+                        <span className={styles.trackSoon}>SOON</span>
+                      )}
+                    </span>
+                    <span className={styles.trackSub}>{g.sub}</span>
+                  </Link>
+                  <span className={styles.trackMeta}>{g.meta.duration}</span>
+                  <span className={styles.trackPlay} aria-hidden>
+                    ▸
+                  </span>
+                </motion.li>
+              ))}
+            </ol>
 
-      {/* ============ 02 GAMES (minimal list) ============ */}
-      <section className={styles.gamesSection}>
-        <span className={styles.bgNum} aria-hidden>02</span>
-        <div className={styles.gamesHead}>
-          <SectionLabel index="02" label="/ GAMES" />
-          <Link href="/games" className={styles.gamesAll}>
-            전체 보기 <span aria-hidden>→</span>
-          </Link>
-        </div>
-
-        <ul className={styles.gameList}>
-          {games.map((g, i) => (
-            <motion.li
-              key={g.slug}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.4 }}
-              transition={{ duration: 0.6, ease, delay: i * 0.08 }}
+            <motion.div
+              className={styles.ctaRow}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, ease, delay: 0.9 }}
             >
-              <Link href={`/games/${g.slug}`} className={styles.gameRow}>
-                <span className={styles.gameRowEmoji} aria-hidden>{g.accent}</span>
-                <span className={styles.gameRowTitle}>{g.title}</span>
-                <span className={styles.gameRowSub}>{g.sub}</span>
-                {g.available ? (
-                  <span className={styles.gameRowArrow} aria-hidden>→</span>
-                ) : (
-                  <span className={styles.gameRowSoon}>준비중</span>
-                )}
-              </Link>
-            </motion.li>
-          ))}
-        </ul>
+              <Magnetic strength={0.3}>
+                <Link href="/games" className={styles.cta}>
+                  <span className={styles.ctaDot} aria-hidden />
+                  <span>전체 게임 보기</span>
+                  <span className={styles.ctaArrow} aria-hidden>→</span>
+                </Link>
+              </Magnetic>
+              <p className={styles.schedule}>
+                <span className={styles.scheduleDot} aria-hidden />
+                LIVE — 언제든 함께 플레이
+              </p>
+            </motion.div>
+          </motion.aside>
+        </div>
       </section>
 
-      {/* ============ 03 FINAL CTA ============ */}
+      {/* ============ STUDIO BIO ============ */}
+      <motion.section
+        className={styles.bio}
+        initial={{ opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.3 }}
+        transition={{ duration: 0.9, ease }}
+      >
+        <div className={styles.bioInner}>
+          <p className={styles.bioLabel}>Studio Bio</p>
+          <h3 className={styles.bioTitle}>
+            가벼운 마음으로, <em>그러나 진심으로</em> 노는 사람들을 위한 공간.
+          </h3>
+          <p className={styles.bioText}>
+            뽀그네 게임 스튜디오는 친구들과 함께 즐기는 실시간 미니게임을 만들어요. 보드게임부터 가위바위보 토너먼트까지 — 한 화면을 같이 보며, 가볍게 노는 시간을 위해 디자인했습니다.
+          </p>
+          <ul className={styles.bioMeta}>
+            <li>est. 2026</li>
+            <li>Seoul</li>
+            <li>실시간 멀티플레이</li>
+          </ul>
+        </div>
+      </motion.section>
+
+      {/* ============ FINAL CTA ============ */}
       <motion.section
         className={styles.finalCta}
-        initial={{ opacity: 0, y: 60 }}
+        initial={{ opacity: 0, y: 40 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, amount: 0.4 }}
         transition={{ duration: 0.9, ease }}
       >
-        <SectionLabel index="03" label="/ READY?" align="center" />
+        <p className={styles.finalScript}>Ready?</p>
         <h2 className={styles.finalTitle}>
-          준비됐나요<span className={styles.titlePunct}>?</span>
+          지금, <em>시작해볼까요</em>
         </h2>
-        <p className={styles.finalText}>
-          지금 바로 게임을 시작해보세요.
-        </p>
         <Magnetic strength={0.4}>
           <Link href="/games" className={styles.finalBtn}>
             <span>START NOW</span>

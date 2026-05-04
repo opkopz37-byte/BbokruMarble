@@ -45,3 +45,25 @@
 .text {
   letter-spacing: 0.01em;
 }
+
+/* ============ ON-AIR DARK THEME OVERRIDES ============ */
+:global(body.themeDark) .wrapper {
+  background: var(--bg-card);
+  border-top: 1px solid var(--border-warm);
+  border-bottom: 1px solid var(--border-warm);
+}
+
+:global(body.themeDark) .item {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 400;
+  color: var(--gold-bright);
+}
+
+:global(body.themeDark) .text {
+  color: var(--gold-bright);
+}
+
+:global(body.themeDark) .dot {
+  color: var(--gold-soft);
+}

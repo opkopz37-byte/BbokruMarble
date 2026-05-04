@@ -18,6 +18,22 @@
   --shadow: 6px 6px 0px #000000;
   --font-display: var(--font-jua), 'Jua', sans-serif;
   --font-body: var(--font-noto), 'Noto Sans KR', sans-serif;
+
+  /* vintage / on-air palette */
+  --bg-deep: #1a1310;
+  --bg-card: #221814;
+  --bg-card-2: #2a1f18;
+  --border-warm: rgba(212, 163, 115, 0.18);
+  --border-warm-strong: rgba(212, 163, 115, 0.4);
+  --gold: #d4a373;
+  --gold-bright: #ecc294;
+  --gold-soft: #b88b5e;
+  --text-cream: #ede0cf;
+  --text-cream-muted: #b8a890;
+  --text-cream-faded: #7a6c5c;
+  --font-serif: var(--font-cormorant), 'Cormorant Garamond', 'Noto Serif KR', serif;
+  --font-script: var(--font-allura), 'Allura', cursive;
+  --font-serif-kr: var(--font-noto-serif), 'Noto Serif KR', serif;
 }
 
 html,
@@ -26,12 +42,24 @@ body {
   letter-spacing: -0.02em;
   background: var(--pale-yellow);
   min-height: 100vh;
+  min-height: 100dvh;
   color: var(--gray-900);
   font-size: 16px;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  overscroll-behavior-y: none;
+}
+
+/* Headings: 줄바꿈을 자연스럽게 균형있게 */
+h1, h2, h3, h4 {
+  text-wrap: balance;
+}
+p {
+  text-wrap: pretty;
 }
 
 a {
@@ -67,6 +95,26 @@ main {
   background: var(--black);
   border: 2px solid var(--pale-yellow);
   border-radius: 100px;
+}
+
+/* ============= ON-AIR (DARK) THEME ============= */
+body.themeDark {
+  background: var(--bg-deep);
+  color: var(--text-cream);
+}
+
+body.themeDark::selection {
+  background: var(--gold);
+  color: var(--bg-deep);
+}
+
+body.themeDark::-webkit-scrollbar-track {
+  background: var(--bg-deep);
+}
+
+body.themeDark::-webkit-scrollbar-thumb {
+  background: var(--gold-soft);
+  border: 2px solid var(--bg-deep);
 }
 
 @keyframes fadeInUp {

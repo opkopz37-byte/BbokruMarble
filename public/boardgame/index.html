@@ -2,11 +2,11 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>뽁루마블 - 주사위 보드게임</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Jua&family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Jua&family=Noto+Sans+KR:wght@400;500;700;900&family=Noto+Serif+KR:wght@400;500;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Allura&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -15,189 +15,222 @@
         }
 
         :root {
-            --primary-yellow: #FFD700;
-            --pale-yellow: #FFFEF5;
-            --light-gray: #F8F8F0;
-            --white: #FFFFFF;
-            --black: #000000;
-            --pink: #FFB8D9;
-            --shadow: 6px 6px 0px #000000;
+            --bg-deep: #1a1310;
+            --bg-card: #221814;
+            --bg-card-2: #2a1f18;
+            --border-warm: rgba(212, 163, 115, 0.18);
+            --border-warm-strong: rgba(212, 163, 115, 0.4);
+            --gold: #d4a373;
+            --gold-bright: #ecc294;
+            --gold-soft: #b88b5e;
+            --text-cream: #ede0cf;
+            --text-cream-muted: #b8a890;
+            --text-cream-faded: #7a6c5c;
+            --danger: #c97a6e;
+            --font-serif: 'Cormorant Garamond', 'Noto Serif KR', serif;
+            --font-script: 'Allura', cursive;
+            --font-serif-kr: 'Noto Serif KR', serif;
+            --font-body: 'Noto Sans KR', sans-serif;
         }
 
         body {
-            font-family: 'Noto Sans KR', sans-serif;
-            letter-spacing: -0.03em;
-            background: var(--pale-yellow);
+            font-family: var(--font-body);
+            font-weight: 400;
+            letter-spacing: -0.01em;
+            background: var(--bg-deep);
+            color: var(--text-cream);
             min-height: 100vh;
-            padding: 40px 20px;
+            padding: 60px 20px 80px;
+            position: relative;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 0;
+            background:
+                radial-gradient(circle at 20% 10%, rgba(212, 163, 115, 0.08), transparent 55%),
+                radial-gradient(circle at 80% 90%, rgba(184, 139, 94, 0.06), transparent 60%);
         }
 
         .container {
-            max-width: 1200px;
+            max-width: 1100px;
             margin: 0 auto;
+            position: relative;
+            z-index: 1;
         }
 
         .header {
             text-align: center;
-            margin-bottom: 60px;
+            margin-bottom: 70px;
             animation: fadeInDown 0.8s ease;
         }
 
         .header h1 {
-            font-family: 'Jua', sans-serif;
-            font-size: clamp(3rem, 8vw, 6rem);
-            color: var(--black);
-            margin-bottom: 20px;
+            font-family: var(--font-serif-kr);
+            font-weight: 500;
+            font-size: clamp(3rem, 8vw, 5.5rem);
+            color: var(--text-cream);
+            margin-bottom: 16px;
+            letter-spacing: -0.02em;
+            line-height: 1;
+        }
+
+        .header h1::after {
+            content: "Bbokrumarble";
+            display: block;
+            font-family: var(--font-script);
+            font-weight: 400;
+            font-size: 0.42em;
+            color: var(--gold-bright);
+            margin-top: 10px;
             letter-spacing: 0;
         }
 
         .cards-container {
             display: grid;
-            gap: 40px;
+            gap: 28px;
             margin-bottom: 60px;
         }
 
         /* 배너 카드 공통 스타일 */
         .banner-card {
-            border: 5px solid var(--black);
-            box-shadow: var(--shadow);
-            padding: 40px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-warm);
+            box-shadow: 0 30px 60px -24px rgba(0, 0, 0, 0.6);
+            padding: 44px;
             position: relative;
             animation: fadeInUp 0.8s ease;
-            border-radius: 30px;
-            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            border-radius: 18px;
+            transition: border-color 0.3s ease, background 0.3s ease, transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
         }
-        
+
         .banner-card:hover {
-            transform: translateY(-8px);
-            box-shadow: 8px 8px 0px #000000;
+            transform: translateY(-4px);
+            border-color: var(--border-warm-strong);
+            background: var(--bg-card-2);
         }
 
-        /* 이미지 배경 카드 */
-        .image-card {
-            background: linear-gradient(rgba(255, 215, 0, 0.2), rgba(255, 199, 0, 0.2)),
-                        url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23FFD700" width="50" height="50" opacity="0.1"/><rect fill="%23FFC700" x="50" width="50" height="50" opacity="0.1"/><rect fill="%23FFC700" y="50" width="50" height="50" opacity="0.1"/><rect fill="%23FFD700" x="50" y="50" width="50" height="50" opacity="0.1"/></svg>'),
-                        var(--pale-yellow);
-            background-size: 40px 40px;
-            animation-delay: 0.1s;
-        }
-
-        /* 화이트 배경 카드 */
-        .white-card {
-            background: var(--light-gray);
-            animation-delay: 0.3s;
-        }
-
-        /* 옅은 노랑-그레이 배경 카드 */
-        .pale-card {
-            background: var(--pale-yellow);
-            animation-delay: 0.5s;
-        }
+        .image-card { animation-delay: 0.1s; }
+        .white-card { animation-delay: 0.3s; }
+        .pale-card { animation-delay: 0.5s; }
 
         .badge {
             display: inline-block;
-            background: var(--primary-yellow);
-            color: var(--black);
-            padding: 8px 20px;
-            border: 3px solid var(--black);
-            font-weight: 900;
-            font-size: 0.9rem;
-            letter-spacing: 0;
-            margin-bottom: 20px;
-            transform: rotate(-2deg);
-            box-shadow: 3px 3px 0px #000000;
-            border-radius: 20px;
-            animation: badgeShine 3s ease-in-out infinite;
+            background: transparent;
+            color: var(--gold-bright);
+            padding: 5px 14px;
+            border: 1px solid var(--gold);
+            font-family: var(--font-body);
+            font-weight: 600;
+            font-size: 0.7rem;
+            letter-spacing: 0.22em;
+            margin-bottom: 22px;
+            border-radius: 100px;
         }
 
         .card-title {
-            font-family: 'Jua', sans-serif;
-            font-size: clamp(2rem, 5vw, 3rem);
-            color: var(--black);
-            margin-bottom: 20px;
-            line-height: 1.2;
-            letter-spacing: 0;
+            font-family: var(--font-serif-kr);
+            font-weight: 500;
+            font-size: clamp(1.7rem, 4vw, 2.4rem);
+            color: var(--text-cream);
+            margin-bottom: 18px;
+            line-height: 1.25;
+            letter-spacing: -0.01em;
         }
 
         .card-text {
-            font-size: clamp(1rem, 2vw, 1.2rem);
-            color: var(--black);
-            line-height: 1.8;
-            margin-bottom: 30px;
+            font-family: var(--font-body);
+            font-size: clamp(0.95rem, 1.4vw, 1.05rem);
+            color: var(--text-cream-muted);
+            line-height: 1.85;
+            margin-bottom: 28px;
             font-weight: 400;
         }
 
         .button-group {
             display: flex;
-            gap: 15px;
+            gap: 14px;
             flex-wrap: wrap;
-            margin-bottom: 30px;
+            margin-bottom: 28px;
         }
 
         .btn {
             padding: 15px 30px;
-            border: 4px solid var(--black);
-            font-weight: 900;
-            font-size: 1rem;
+            border: none;
+            font-family: var(--font-body);
+            font-weight: 700;
+            font-size: 0.85rem;
+            letter-spacing: 0.14em;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: background 0.25s ease, color 0.25s ease,
+                border-color 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
             text-decoration: none;
             display: inline-block;
-            font-family: 'Noto Sans KR', sans-serif;
-            letter-spacing: -0.03em;
-            border-radius: 20px;
+            border-radius: 100px;
         }
 
         .btn-cta {
-            background: var(--primary-yellow);
-            color: var(--black);
-            box-shadow: 5px 5px 0px #000000;
-            animation: pulse 2s infinite;
+            background: var(--gold);
+            color: var(--bg-deep);
+            box-shadow: 0 14px 32px -10px rgba(212, 163, 115, 0.5);
         }
 
         .btn-cta:hover {
-            background: #FFC700;
-            transform: translate(-2px, -2px) scale(1.05);
-            box-shadow: 7px 7px 0px #000000;
-            animation: none;
+            background: var(--gold-bright);
+            transform: translateY(-2px);
+            box-shadow: 0 18px 40px -10px rgba(236, 194, 148, 0.6);
         }
 
         .btn-sub {
-            background: var(--white);
-            color: var(--black);
-            box-shadow: 5px 5px 0px #000000;
+            background: transparent;
+            color: var(--gold-bright);
+            border: 1px solid var(--gold);
         }
 
         .btn-sub:hover {
-            background: var(--light-gray);
-            transform: translate(-2px, -2px) scale(1.05);
-            box-shadow: 7px 7px 0px #000000;
+            background: var(--gold);
+            color: var(--bg-deep);
+            transform: translateY(-2px);
         }
 
         .game-rules {
-            background: rgba(255, 255, 255, 0.5);
-            border: 3px solid var(--black);
-            padding: 25px;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--border-warm);
+            padding: 24px 26px;
             margin-top: 20px;
-            border-radius: 25px;
+            border-radius: 14px;
         }
 
         .game-rules h3 {
-            font-family: 'Jua', sans-serif;
-            font-size: 1.5rem;
-            margin-bottom: 15px;
-            color: var(--black);
+            font-family: var(--font-serif);
+            font-style: italic;
+            font-weight: 500;
+            font-size: 1.2rem;
+            margin-bottom: 14px;
+            color: var(--gold-bright);
             letter-spacing: 0;
         }
 
         .game-rules ol {
-            padding-left: 25px;
-            line-height: 2;
+            padding-left: 20px;
+            line-height: 1.9;
         }
 
         .game-rules li {
-            font-weight: 700;
-            margin-bottom: 8px;
+            font-family: var(--font-body);
+            font-weight: 400;
+            font-size: 0.92rem;
+            color: var(--text-cream-muted);
+            margin-bottom: 4px;
+        }
+
+        .game-rules li::marker {
+            color: var(--gold-soft);
+            font-family: var(--font-serif);
+            font-style: italic;
         }
 
         /* 모달 */
@@ -209,36 +242,40 @@
             top: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.6);
+            background-color: rgba(10, 6, 4, 0.7);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
             animation: fadeIn 0.3s ease;
             overflow-y: auto;
             padding: 20px;
         }
 
         .modal-content {
-            background-color: var(--pale-yellow);
+            background-color: var(--bg-card);
             margin: 5% auto;
             padding: 0;
-            border: 5px solid var(--black);
-            border-radius: 30px;
+            border: 1px solid var(--border-warm-strong);
+            border-radius: 18px;
             width: 90%;
-            max-width: 700px;
-            box-shadow: 10px 10px 0px #000000;
+            max-width: 680px;
+            box-shadow: 0 40px 80px -24px rgba(0, 0, 0, 0.7);
             animation: slideDown 0.3s ease;
+            color: var(--text-cream);
         }
 
         .modal-header {
-            background: var(--primary-yellow);
-            border-bottom: 5px solid var(--black);
-            padding: 30px;
-            border-radius: 25px 25px 0 0;
+            background: var(--bg-card-2);
+            border-bottom: 1px solid var(--border-warm);
+            padding: 28px 32px;
+            border-radius: 17px 17px 0 0;
         }
 
         .modal-title {
-            font-family: 'Jua', sans-serif;
-            font-size: 2.5rem;
-            color: var(--black);
-            letter-spacing: 0;
+            font-family: var(--font-serif-kr);
+            font-weight: 500;
+            font-size: 1.85rem;
+            color: var(--text-cream);
+            letter-spacing: -0.01em;
             text-align: center;
             margin: 0;
         }
@@ -249,48 +286,62 @@
 
         .info-cards-grid {
             display: grid;
-            gap: 15px;
+            gap: 12px;
         }
 
         .info-mini-card {
-            background: white;
-            border: 3px solid var(--black);
-            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border-warm);
+            border-radius: 12px;
             padding: 20px;
-            transition: all 0.2s;
+            transition: border-color 0.25s ease, background 0.25s ease;
         }
 
         .info-mini-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 5px 5px 0px #000000;
+            border-color: var(--border-warm-strong);
+            background: rgba(212, 163, 115, 0.05);
         }
 
         .info-mini-card-icon {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
+            font-size: 2.2rem;
+            margin-bottom: 12px;
+            opacity: 0.9;
         }
 
         .info-mini-card-title {
-            font-weight: 900;
-            font-size: 1.2rem;
+            font-family: var(--font-serif-kr);
+            font-weight: 500;
+            font-size: 1.1rem;
             margin-bottom: 8px;
-            color: var(--black);
+            color: var(--gold-bright);
         }
 
         .info-mini-card-text {
-            font-size: 0.95rem;
-            line-height: 1.6;
-            color: #555;
+            font-family: var(--font-body);
+            font-size: 0.92rem;
+            line-height: 1.7;
+            color: var(--text-cream-muted);
         }
 
         .modal-description {
-            background: rgba(255, 255, 255, 0.5);
-            border: 3px solid var(--black);
-            border-radius: 20px;
-            padding: 20px;
-            margin-bottom: 20px;
-            font-size: 1.1rem;
-            line-height: 1.8;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--border-warm);
+            border-radius: 12px;
+            padding: 20px 22px;
+            margin-bottom: 22px;
+            font-family: var(--font-serif-kr);
+            font-weight: 500;
+            font-size: 1rem;
+            line-height: 1.85;
+            color: var(--text-cream);
+        }
+
+        .modal-description p {
+            margin-bottom: 6px;
+        }
+
+        .modal-description p:last-child {
+            margin-bottom: 0;
         }
 
         .modal-footer {
@@ -300,96 +351,92 @@
         }
 
         .modal-close {
-            background: var(--primary-yellow);
-            border: 4px solid var(--black);
-            padding: 15px 50px;
-            font-size: 1.2rem;
-            font-weight: 900;
+            background: transparent;
+            color: var(--gold-bright);
+            border: 1px solid var(--gold);
+            padding: 14px 44px;
+            font-family: var(--font-body);
+            font-size: 0.85rem;
+            font-weight: 600;
+            letter-spacing: 0.16em;
             cursor: pointer;
-            border-radius: 20px;
-            box-shadow: 4px 4px 0px #000000;
-            transition: all 0.2s;
-            font-family: 'Noto Sans KR', sans-serif;
-            letter-spacing: -0.03em;
+            border-radius: 100px;
+            transition: background 0.25s ease, color 0.25s ease, transform 0.25s ease;
         }
 
         .modal-close:hover {
-            transform: translate(-2px, -2px) scale(1.05);
-            box-shadow: 6px 6px 0px #000000;
+            background: var(--gold);
+            color: var(--bg-deep);
+            transform: translateY(-2px);
         }
 
         .faq-item {
-            background: white;
-            border: 3px solid var(--black);
-            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border-warm);
+            border-radius: 12px;
             padding: 20px;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
         }
 
         .faq-question {
-            font-weight: 900;
-            font-size: 1.1rem;
-            margin-bottom: 10px;
-            color: #FF69B4;
+            font-family: var(--font-serif-kr);
+            font-weight: 500;
+            font-size: 1rem;
+            margin-bottom: 8px;
+            color: var(--gold-bright);
         }
 
         .faq-answer {
-            font-size: 1rem;
-            line-height: 1.6;
-            color: #555;
+            font-family: var(--font-body);
+            font-size: 0.92rem;
+            line-height: 1.7;
+            color: var(--text-cream-muted);
         }
 
         .tutorial-step {
-            background: white;
-            border: 3px solid var(--black);
-            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border-warm);
+            border-radius: 12px;
             padding: 20px;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
             display: flex;
             align-items: center;
-            gap: 15px;
+            gap: 18px;
         }
 
         .step-number {
-            width: 50px;
-            height: 50px;
-            background: var(--primary-yellow);
-            border: 3px solid var(--black);
+            width: 44px;
+            height: 44px;
+            background: transparent;
+            border: 1px solid var(--gold);
+            color: var(--gold-bright);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-weight: 900;
-            font-size: 1.5rem;
+            font-family: var(--font-serif);
+            font-style: italic;
+            font-weight: 500;
+            font-size: 1.3rem;
             flex-shrink: 0;
         }
 
         .step-text {
             flex: 1;
-            font-size: 1.05rem;
-            line-height: 1.6;
+            font-family: var(--font-body);
+            font-size: 0.98rem;
+            line-height: 1.7;
+            color: var(--text-cream);
         }
 
         @keyframes fadeInDown {
-            from {
-                opacity: 0;
-                transform: translateY(-30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            from { opacity: 0; transform: translateY(-30px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         @keyframes fadeIn {
@@ -398,68 +445,212 @@
         }
 
         @keyframes slideDown {
-            from {
-                transform: translateY(-100px);
-                opacity: 0;
-            }
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
-        }
-        
-        @keyframes pulse {
-            0%, 100% {
-                transform: scale(1);
-                box-shadow: 5px 5px 0px #000000;
-            }
-            50% {
-                transform: scale(1.02);
-                box-shadow: 6px 6px 0px #000000;
-            }
-        }
-        
-        @keyframes badgeShine {
-            0%, 100% {
-                transform: rotate(-2deg) scale(1);
-                box-shadow: 3px 3px 0px #000000;
-            }
-            50% {
-                transform: rotate(-2deg) scale(1.05);
-                box-shadow: 4px 4px 0px #000000;
-            }
+            from { transform: translateY(-30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
         }
 
         /* 반응형 */
         @media (max-width: 768px) {
             body {
-                padding: 20px 15px;
+                padding: 36px 16px 50px;
+                padding-top: max(36px, env(safe-area-inset-top));
+                padding-bottom: max(50px, env(safe-area-inset-bottom));
+            }
+
+            .header {
+                margin-bottom: 44px;
+            }
+
+            .header h1 {
+                font-size: clamp(2.5rem, 12vw, 3.6rem);
+            }
+
+            .header h1::after {
+                font-size: 0.46em;
+            }
+
+            .cards-container {
+                gap: 22px;
             }
 
             .banner-card {
-                padding: 30px 20px;
+                padding: 30px 24px;
+                border-radius: 16px;
+            }
+
+            .badge {
+                font-size: 0.65rem;
+                padding: 4px 12px;
+                margin-bottom: 18px;
+            }
+
+            .card-title {
+                font-size: clamp(1.4rem, 5.5vw, 1.85rem);
+                margin-bottom: 14px;
+            }
+
+            .card-text {
+                font-size: 0.92rem;
+                line-height: 1.7;
+                margin-bottom: 22px;
             }
 
             .button-group {
                 flex-direction: column;
+                gap: 10px;
+                margin-bottom: 22px;
             }
 
             .btn {
                 width: 100%;
                 text-align: center;
+                padding: 14px 24px;
+                font-size: 0.8rem;
+            }
+
+            .game-rules {
+                padding: 20px 22px;
+            }
+
+            .game-rules h3 {
+                font-size: 1.05rem;
+                margin-bottom: 10px;
+            }
+
+            .game-rules ol {
+                line-height: 1.85;
+                padding-left: 18px;
+            }
+
+            .game-rules li {
+                font-size: 0.88rem;
+            }
+
+            .modal {
+                padding: 16px;
             }
 
             .modal-content {
-                padding: 30px 20px;
-                margin: 30% auto;
+                margin: 6% auto;
+                border-radius: 16px;
+            }
+
+            .modal-header {
+                padding: 22px 24px;
+                border-radius: 15px 15px 0 0;
+            }
+
+            .modal-title {
+                font-size: 1.55rem;
+            }
+
+            .modal-body {
+                padding: 22px 24px;
+            }
+
+            .info-mini-card {
+                padding: 18px;
+            }
+
+            .modal-description {
+                padding: 16px 18px;
+                font-size: 0.95rem;
+            }
+
+            .modal-footer {
+                padding: 0 24px 24px;
+            }
+
+            .modal-close {
+                padding: 12px 32px;
+                font-size: 0.78rem;
+                width: 100%;
             }
         }
 
         @media (max-width: 480px) {
-            .banner-card {
-                border-width: 4px;
-                box-shadow: 4px 4px 0px #000000;
+            body {
+                padding: 28px 14px 44px;
             }
+            .banner-card {
+                padding: 24px 20px;
+            }
+            .card-title {
+                font-size: clamp(1.3rem, 6vw, 1.6rem);
+            }
+        }
+
+        /* 폰 가로 — 카드 2열 + 압축 */
+        @media (max-width: 900px) and (orientation: landscape) {
+            body {
+                padding: 24px 22px 36px;
+            }
+            .header {
+                margin-bottom: 32px;
+            }
+            .header h1 {
+                font-size: clamp(2.2rem, 8vh, 3.4rem);
+                margin-bottom: 8px;
+            }
+            .header h1::after {
+                font-size: 0.42em;
+                margin-top: 4px;
+            }
+            .cards-container {
+                grid-template-columns: 1fr 1fr;
+                gap: 16px;
+            }
+            .banner-card {
+                padding: 24px 22px;
+            }
+            .badge {
+                margin-bottom: 14px;
+            }
+            .card-title {
+                font-size: clamp(1.2rem, 4vw, 1.7rem);
+                margin-bottom: 12px;
+            }
+            .card-text {
+                font-size: 0.88rem;
+                line-height: 1.65;
+                margin-bottom: 18px;
+            }
+            .button-group {
+                flex-direction: row;
+                gap: 8px;
+                margin-bottom: 18px;
+            }
+            .btn {
+                padding: 11px 18px;
+                font-size: 0.75rem;
+                flex: 1;
+            }
+            .game-rules {
+                padding: 16px 18px;
+            }
+            .game-rules ol {
+                line-height: 1.7;
+            }
+            .game-rules li {
+                font-size: 0.84rem;
+            }
+        }
+
+        ::selection {
+            background: var(--gold);
+            color: var(--bg-deep);
+        }
+
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--bg-deep);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--gold-soft);
+            border: 2px solid var(--bg-deep);
+            border-radius: 100px;
         }
     </style>
 </head>

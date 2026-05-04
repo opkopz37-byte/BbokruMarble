@@ -35,3 +35,40 @@
 .inverted .text {
   color: var(--gray-400);
 }
+
+/* ============ ON-AIR DARK THEME OVERRIDES ============ */
+:global(body.themeDark) .label {
+  font-family: var(--font-script);
+  font-weight: 400;
+  font-size: 1.5rem;
+  letter-spacing: 0;
+  color: var(--gold-bright);
+  margin-bottom: 28px;
+}
+
+:global(body.themeDark) .num {
+  background: transparent;
+  color: var(--gold-bright);
+  font-family: var(--font-script);
+  font-size: 1.5rem;
+  padding: 0;
+  letter-spacing: 0;
+}
+
+:global(body.themeDark) .text {
+  color: var(--text-cream-faded);
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 400;
+  font-size: 0.9rem;
+  letter-spacing: 0.04em;
+}
+
+:global(body.themeDark) .inverted .num,
+:global(body.themeDark) .inverted .text {
+  color: var(--gold-bright);
+}
+
+:global(body.themeDark) .inverted .text {
+  color: var(--text-cream-faded);
+}

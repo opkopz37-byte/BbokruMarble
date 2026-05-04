@@ -41,8 +41,9 @@ export default function SmoothScroll({
       ref={lenisRef}
       root
       options={{
-        lerp: 0.1,
-        duration: 1.2,
+        // 더 빠릿한 응답성: lerp 높이고 duration 줄임 (이전 0.1 / 1.2 → 0.16 / 0.85)
+        lerp: 0.16,
+        duration: 0.85,
         smoothWheel: true,
       }}
     >

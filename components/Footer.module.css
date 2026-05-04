@@ -77,3 +77,39 @@
     align-items: flex-start;
   }
 }
+
+/* ============ ON-AIR DARK THEME OVERRIDES ============ */
+:global(body.themeDark) .footer {
+  background: var(--bg-deep);
+  border-top: 1px solid var(--border-warm);
+  margin-top: 0;
+  color: var(--text-cream-muted);
+}
+
+:global(body.themeDark) .brand {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 500;
+  color: var(--text-cream);
+  letter-spacing: 0.01em;
+}
+
+:global(body.themeDark) .tagline {
+  color: var(--text-cream-faded);
+  font-weight: 400;
+}
+
+:global(body.themeDark) .navLink {
+  color: var(--text-cream-muted);
+  font-weight: 500;
+  letter-spacing: 0.2em;
+}
+
+:global(body.themeDark) .navLink:hover {
+  opacity: 1;
+  color: var(--gold-bright);
+}
+
+:global(body.themeDark) .copy {
+  color: var(--text-cream-faded);
+}
