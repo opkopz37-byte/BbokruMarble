@@ -39,12 +39,14 @@
   position: relative;
   aspect-ratio: 1 / 1;
   border-radius: 20px;
-  overflow: hidden;
+  /* overflow: visible로 두어 lamp glow가 가장자리 밖으로 새어나감 */
+  overflow: visible;
   box-shadow:
     0 30px 80px -30px rgba(0, 0, 0, 0.8),
     0 0 0 1px var(--border-warm);
-  /* GPU 레이어 승격으로 motion.div의 transform 비용 절감 */
+  /* GPU 레이어 승격 */
   transform: translateZ(0);
+  isolation: isolate;
 }
 
 .heroImage {
@@ -52,18 +54,91 @@
   height: 100%;
   object-fit: cover;
   display: block;
+  border-radius: 20px;
+  position: relative;
+  z-index: 1;
 }
 
-.heroImageGlow {
+/* 무대 조명 4개 — 켜질 때 밝게 하이라이트 + 이후 은은하게 유지 */
+.lamp {
   position: absolute;
-  inset: -20%;
-  background: radial-gradient(
-    circle at 50% 40%,
-    rgba(212, 163, 115, 0.18),
-    transparent 60%
-  );
-  z-index: -1;
   pointer-events: none;
+  border-radius: 50%;
+  z-index: 0;
+  transform-origin: center;
+  will-change: opacity, transform;
+}
+
+.lampTop {
+  top: -22%;
+  left: 30%;
+  right: 30%;
+  height: 60%;
+  background: radial-gradient(
+    ellipse at 50% 100%,
+    rgba(255, 220, 170, 0.55),
+    rgba(212, 163, 115, 0.25) 35%,
+    transparent 70%
+  );
+  filter: blur(8px);
+}
+
+.lampRight {
+  top: 18%;
+  right: -22%;
+  width: 55%;
+  height: 70%;
+  background: radial-gradient(
+    ellipse at 0% 50%,
+    rgba(236, 194, 148, 0.5),
+    rgba(184, 139, 94, 0.2) 35%,
+    transparent 70%
+  );
+  filter: blur(8px);
+}
+
+.lampLeft {
+  top: 22%;
+  left: -22%;
+  width: 55%;
+  height: 70%;
+  background: radial-gradient(
+    ellipse at 100% 50%,
+    rgba(236, 194, 148, 0.45),
+    rgba(184, 139, 94, 0.18) 35%,
+    transparent 70%
+  );
+  filter: blur(8px);
+}
+
+.lampBottom {
+  bottom: -18%;
+  left: 20%;
+  right: 20%;
+  height: 50%;
+  background: radial-gradient(
+    ellipse at 50% 0%,
+    rgba(255, 200, 140, 0.4),
+    rgba(212, 163, 115, 0.15) 40%,
+    transparent 75%
+  );
+  filter: blur(10px);
+}
+
+/* 이미지 위로 떨리는 캔들 글로우 — 이미지의 촛불에서 빛이 새어나오는 느낌 */
+.candleFlicker {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  border-radius: 20px;
+  background: radial-gradient(
+    circle at 35% 65%,
+    rgba(255, 195, 130, 0.18),
+    transparent 25%
+  );
+  mix-blend-mode: screen;
+  will-change: opacity;
 }
 
 /* --- RIGHT: tracklist side --- */

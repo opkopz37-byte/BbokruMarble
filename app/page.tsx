@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { motion } from "motion/react";
 import Magnetic from "@/components/Magnetic";
+import SpotlightOverlay from "@/components/SpotlightOverlay";
 import { games } from "@/lib/games";
 import styles from "./page.module.css";
 
@@ -12,6 +13,8 @@ const ease = [0.22, 1, 0.36, 1] as const;
 export default function Home() {
   return (
     <div className={styles.page}>
+      <SpotlightOverlay />
+
       {/* ============ HERO ============ */}
       <section className={styles.hero}>
         <div className={styles.heroGrid}>
@@ -21,6 +24,55 @@ export default function Home() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1.1, ease }}
           >
+            {/* 무대 조명: 위/오른쪽/왼쪽/아래에서 순차적으로 켜짐 */}
+            <motion.div
+              className={`${styles.lamp} ${styles.lampTop}`}
+              aria-hidden
+              initial={{ opacity: 0, scale: 0.4 }}
+              animate={{ opacity: [0, 0.9, 0.7], scale: 1 }}
+              transition={{
+                duration: 1.4,
+                ease,
+                delay: 0.8,
+                opacity: { times: [0, 0.4, 1], duration: 1.4 },
+              }}
+            />
+            <motion.div
+              className={`${styles.lamp} ${styles.lampRight}`}
+              aria-hidden
+              initial={{ opacity: 0, scale: 0.4 }}
+              animate={{ opacity: [0, 0.85, 0.6], scale: 1 }}
+              transition={{
+                duration: 1.4,
+                ease,
+                delay: 1.1,
+                opacity: { times: [0, 0.4, 1], duration: 1.4 },
+              }}
+            />
+            <motion.div
+              className={`${styles.lamp} ${styles.lampLeft}`}
+              aria-hidden
+              initial={{ opacity: 0, scale: 0.4 }}
+              animate={{ opacity: [0, 0.85, 0.55], scale: 1 }}
+              transition={{
+                duration: 1.4,
+                ease,
+                delay: 1.4,
+                opacity: { times: [0, 0.4, 1], duration: 1.4 },
+              }}
+            />
+            <motion.div
+              className={`${styles.lamp} ${styles.lampBottom}`}
+              aria-hidden
+              initial={{ opacity: 0, scale: 0.4 }}
+              animate={{ opacity: [0, 0.7, 0.45], scale: 1 }}
+              transition={{
+                duration: 1.6,
+                ease,
+                delay: 1.7,
+                opacity: { times: [0, 0.4, 1], duration: 1.6 },
+              }}
+            />
             <Image
               src="/hero-on-air.png"
               alt="On Air — 뽀그네 게임 스튜디오"
@@ -29,7 +81,19 @@ export default function Home() {
               className={styles.heroImage}
               priority
             />
-            <div className={styles.heroImageGlow} aria-hidden />
+            {/* 이미지 위로 살짝 떨리는 캔들 글로우 */}
+            <motion.div
+              className={styles.candleFlicker}
+              aria-hidden
+              initial={{ opacity: 0 }}
+              animate={{ opacity: [0.45, 0.7, 0.5, 0.65, 0.45] }}
+              transition={{
+                duration: 5,
+                ease: "easeInOut",
+                repeat: Infinity,
+                delay: 2.2,
+              }}
+            />
           </motion.div>
 
           <motion.aside

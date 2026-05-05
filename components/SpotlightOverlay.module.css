@@ -1,0 +1,33 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 90;
+  background: radial-gradient(
+    ellipse 80% 70% at 50% 45%,
+    transparent 0%,
+    transparent 35%,
+    rgba(10, 6, 4, 0.45) 75%,
+    rgba(10, 6, 4, 0.85) 100%
+  );
+  will-change: opacity;
+}
+
+@media (max-width: 720px) {
+  .overlay {
+    background: radial-gradient(
+      ellipse 90% 65% at 50% 45%,
+      transparent 0%,
+      transparent 30%,
+      rgba(10, 6, 4, 0.5) 75%,
+      rgba(10, 6, 4, 0.9) 100%
+    );
+  }
+}
+
+/* 모션 줄임 환경에선 정적 vignette만 */
+@media (prefers-reduced-motion: reduce) {
+  .overlay {
+    opacity: 0.5 !important;
+  }
+}
