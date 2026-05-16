@@ -1,17 +1,28 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "motion/react";
+import { get, onDisconnect, onValue, ref, set, update } from "firebase/database";
 import Magnetic from "@/components/Magnetic";
+import ConfirmModal from "@/components/ConfirmModal";
+import { db } from "@/lib/firebase";
+import {
+  createInitialDiceRoom,
+  DICE_HISTORY_LIMIT,
+  DICE_ROOM_PATH,
+  generateDiceClientId,
+  type DiceHistoryEntry,
+  type DiceRoom,
+  type DiceThemeKey,
+} from "@/lib/dice";
 import styles from "./page.module.css";
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
-type ThemeKey = "dawn" | "acting" | "calm" | "excite";
-
 type ThemeConfig = {
-  key: ThemeKey;
+  key: DiceThemeKey;
   name: string;
   short: string;
   emoji: string;
@@ -108,23 +119,29 @@ const FACE_ROTATIONS: Record<number, string> = {
 
 const ROLL_DURATION_MS = 1200;
 const VOICE_DELAY_MS = 600;
-const HISTORY_LIMIT = 30;
 
-type RollEntry = { id: number; theme: ThemeKey; value: number };
+function DicePlayPageInner() {
+  const searchParams = useSearchParams();
+  const requestedRole = searchParams.get("role");
 
-export default function DicePlayPage() {
-  const [themeKey, setThemeKey] = useState<ThemeKey>("dawn");
-  const [face, setFace] = useState<number>(1);
-  const [rolling, setRolling] = useState(false);
-  const [result, setResult] = useState<number | null>(null);
-  const [history, setHistory] = useState<RollEntry[]>([]);
+  const [room, setRoom] = useState<DiceRoom | null>(null);
+  const [roomLoaded, setRoomLoaded] = useState(false);
+  const [isHost, setIsHost] = useState<boolean | null>(null);
+  const [clientId, setClientId] = useState<string | null>(null);
   const [soundOn, setSoundOn] = useState(true);
+  const [hostBusy, setHostBusy] = useState(false);
+  const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
 
+  const initOnce = useRef(false);
+  const audioCacheRef = useRef<Map<string, HTMLAudioElement>>(new Map());
   const rollSoundRef = useRef<HTMLAudioElement | null>(null);
   const voiceRef = useRef<HTMLAudioElement | null>(null);
-  const audioCacheRef = useRef<Map<string, HTMLAudioElement>>(new Map());
-  const idRef = useRef(0);
+  const lastRollSeqRef = useRef<number>(-1);
+  const lastResultSeqRef = useRef<number>(-1);
+  const rollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const voiceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // -------- AUDIO HELPERS --------
   const getAudio = useCallback((src: string) => {
     const cache = audioCacheRef.current;
     let audio = cache.get(src);
@@ -136,23 +153,8 @@ export default function DicePlayPage() {
     return audio;
   }, []);
 
-  const theme = useMemo(
-    () => THEMES.find((t) => t.key === themeKey) ?? THEMES[0],
-    [themeKey],
-  );
-
-  const stats = useMemo(() => {
-    const count = history.length;
-    const sum = history.reduce((a, b) => a + b.value, 0);
-    return { count, sum };
-  }, [history]);
-
-  const rollDice = useCallback(() => {
-    if (rolling) return;
-    setRolling(true);
-    setResult(null);
-
-    if (soundOn) {
+  const playRollSound = useCallback(
+    (theme: ThemeConfig) => {
       try {
         if (rollSoundRef.current) rollSoundRef.current.pause();
         const audio = getAudio(theme.rollSound);
@@ -161,38 +163,208 @@ export default function DicePlayPage() {
         rollSoundRef.current = audio;
         audio.play().catch(() => {});
       } catch {}
+    },
+    [getAudio],
+  );
+
+  const playVoice = useCallback(
+    (theme: ThemeConfig, value: number) => {
+      try {
+        if (voiceRef.current) voiceRef.current.pause();
+        const v = getAudio(theme.voices[value]);
+        v.volume = 0.8;
+        v.currentTime = 0;
+        voiceRef.current = v;
+        v.play().catch(() => {});
+      } catch {}
+    },
+    [getAudio],
+  );
+
+  // -------- ROLE INIT --------
+  useEffect(() => {
+    if (initOnce.current) return;
+    initOnce.current = true;
+
+    const id = generateDiceClientId();
+    setClientId(id);
+
+    (async () => {
+      try {
+        const snap = await get(ref(db, DICE_ROOM_PATH));
+        const existing = snap.val() as DiceRoom | null;
+
+        if (requestedRole === "host") {
+          if (!existing || !existing.hostId) {
+            const initial = createInitialDiceRoom(id);
+            await set(ref(db, DICE_ROOM_PATH), initial);
+            setIsHost(true);
+          } else if (existing.hostId === id) {
+            setIsHost(true);
+          } else {
+            // 다른 호스트가 이미 있음 → 관전 모드로 다운그레이드
+            setIsHost(false);
+          }
+        } else {
+          setIsHost(false);
+        }
+      } catch (e) {
+        console.error("[dice] init failed", e);
+        setIsHost(false);
+      }
+    })();
+  }, [requestedRole]);
+
+  // -------- SUBSCRIBE --------
+  useEffect(() => {
+    const unsub = onValue(ref(db, DICE_ROOM_PATH), (snap) => {
+      const data = snap.val() as DiceRoom | null;
+      setRoom(data);
+      setRoomLoaded(true);
+    });
+    return () => unsub();
+  }, []);
+
+  // -------- HOST onDisconnect CLEANUP --------
+  useEffect(() => {
+    if (!isHost || !clientId) return;
+    const hostIdRef = ref(db, `${DICE_ROOM_PATH}/hostId`);
+    const rollingRef = ref(db, `${DICE_ROOM_PATH}/rolling`);
+    onDisconnect(hostIdRef).set(null);
+    onDisconnect(rollingRef).set(false);
+  }, [isHost, clientId]);
+
+  // -------- REACT TO ROLL EVENTS (sound + animation drives off room state) --------
+  useEffect(() => {
+    if (!room) return;
+    const themeCfg = THEMES.find((t) => t.key === room.theme) ?? THEMES[0];
+
+    // rolling 시작 — 관전자만 소리 (호스트는 클릭 시점에 이미 재생)
+    if (room.rolling && room.rollSeq !== lastRollSeqRef.current) {
+      lastRollSeqRef.current = room.rollSeq;
+      if (!isHost && soundOn) playRollSound(themeCfg);
     }
 
-    const num = Math.floor(Math.random() * 6) + 1;
-
-    window.setTimeout(() => {
-      setRolling(false);
-      setFace(num);
-      setResult(num);
-      idRef.current += 1;
-      setHistory((prev) =>
-        [{ id: idRef.current, theme: themeKey, value: num }, ...prev].slice(
-          0,
-          HISTORY_LIMIT,
-        ),
-      );
-
+    // 결과 도착 — 보이스 재생 (호스트/관전자 동일하게 반응)
+    if (
+      !room.rolling &&
+      room.result !== null &&
+      room.rollSeq !== lastResultSeqRef.current
+    ) {
+      lastResultSeqRef.current = room.rollSeq;
       if (soundOn) {
-        window.setTimeout(() => {
-          try {
-            if (voiceRef.current) voiceRef.current.pause();
-            const v = getAudio(theme.voices[num]);
-            v.volume = 0.8;
-            v.currentTime = 0;
-            voiceRef.current = v;
-            v.play().catch(() => {});
-          } catch {}
+        if (voiceTimerRef.current) clearTimeout(voiceTimerRef.current);
+        const finalResult = room.result;
+        voiceTimerRef.current = setTimeout(() => {
+          playVoice(themeCfg, finalResult);
         }, VOICE_DELAY_MS);
       }
-    }, ROLL_DURATION_MS);
-  }, [rolling, soundOn, theme, themeKey, getAudio]);
+    }
+  }, [room, isHost, soundOn, playRollSound, playVoice]);
 
+  // -------- CLEANUP TIMERS --------
   useEffect(() => {
+    return () => {
+      if (rollTimerRef.current) clearTimeout(rollTimerRef.current);
+      if (voiceTimerRef.current) clearTimeout(voiceTimerRef.current);
+    };
+  }, []);
+
+  // -------- DERIVED STATE --------
+  const themeKey: DiceThemeKey = room?.theme ?? "dawn";
+  const theme = useMemo(
+    () => THEMES.find((t) => t.key === themeKey) ?? THEMES[0],
+    [themeKey],
+  );
+  const face = room?.face ?? 1;
+  const rolling = room?.rolling ?? false;
+  const result = room?.result ?? null;
+  const history: DiceHistoryEntry[] = room?.history ?? [];
+
+  const stats = useMemo(() => {
+    const count = history.length;
+    const sum = history.reduce((a, b) => a + b.value, 0);
+    return { count, sum };
+  }, [history]);
+
+  // -------- HOST ACTIONS --------
+  const rollDice = useCallback(async () => {
+    if (!isHost || !room || rolling || hostBusy) return;
+    setHostBusy(true);
+
+    const num = Math.floor(Math.random() * 6) + 1;
+    const newSeq = (room.rollSeq ?? 0) + 1;
+
+    if (soundOn) playRollSound(theme);
+
+    try {
+      await update(ref(db, DICE_ROOM_PATH), {
+        rolling: true,
+        rollSeq: newSeq,
+        result: null,
+        updatedAt: Date.now(),
+      });
+
+      if (rollTimerRef.current) clearTimeout(rollTimerRef.current);
+      rollTimerRef.current = setTimeout(async () => {
+        const newEntry: DiceHistoryEntry = {
+          id: newSeq,
+          theme: theme.key,
+          value: num,
+          ts: Date.now(),
+        };
+        const newHistory = [newEntry, ...history].slice(0, DICE_HISTORY_LIMIT);
+        try {
+          await update(ref(db, DICE_ROOM_PATH), {
+            rolling: false,
+            face: num,
+            result: num,
+            history: newHistory,
+            updatedAt: Date.now(),
+          });
+        } catch (e) {
+          console.error("[dice] commit roll failed", e);
+        } finally {
+          setHostBusy(false);
+        }
+      }, ROLL_DURATION_MS);
+    } catch (e) {
+      console.error("[dice] start roll failed", e);
+      setHostBusy(false);
+    }
+  }, [isHost, room, rolling, hostBusy, soundOn, theme, history, playRollSound]);
+
+  const changeTheme = useCallback(
+    async (key: DiceThemeKey) => {
+      if (!isHost || rolling) return;
+      try {
+        await update(ref(db, DICE_ROOM_PATH), {
+          theme: key,
+          updatedAt: Date.now(),
+        });
+      } catch (e) {
+        console.error("[dice] change theme failed", e);
+      }
+    },
+    [isHost, rolling],
+  );
+
+  const resetHistory = useCallback(async () => {
+    if (!isHost) return;
+    try {
+      await update(ref(db, DICE_ROOM_PATH), {
+        history: [],
+        result: null,
+        updatedAt: Date.now(),
+      });
+    } catch (e) {
+      console.error("[dice] reset history failed", e);
+    }
+  }, [isHost]);
+
+  // -------- KEYBOARD --------
+  useEffect(() => {
+    if (!isHost) return;
     const handler = (e: KeyboardEvent) => {
       if (e.code !== "Space") return;
       const tag = (document.activeElement as HTMLElement | null)?.tagName;
@@ -202,12 +374,23 @@ export default function DicePlayPage() {
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [rollDice]);
+  }, [isHost, rollDice]);
 
-  const resetHistory = () => {
-    setHistory([]);
-    setResult(null);
-  };
+  // -------- RENDER STATES --------
+  if (isHost === null || !roomLoaded) {
+    return (
+      <div className={styles.page}>
+        <div className={styles.heroBg} aria-hidden />
+        <div className={styles.titleBlock}>
+          <p className={styles.subtitle}>연결 중...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // 관전자인데 방이 아예 없거나 호스트가 없는 경우
+  const noHost = !room || !room.hostId;
+  const downgraded = requestedRole === "host" && !isHost;
 
   return (
     <div
@@ -222,6 +405,12 @@ export default function DicePlayPage() {
           <span>게임 상세</span>
         </Link>
         <div className={styles.topbarRight}>
+          <span className={styles.kbdHint} aria-label={isHost ? "호스트 모드" : "관전 모드"}>
+            <span aria-hidden>{isHost ? "🎤" : "👀"}</span>
+            <span className={styles.kbdLabel}>
+              {isHost ? "호스트" : "관전 중"}
+            </span>
+          </span>
           <button
             type="button"
             className={`${styles.iconBtn} ${soundOn ? "" : styles.iconBtnOff}`}
@@ -230,10 +419,12 @@ export default function DicePlayPage() {
           >
             <span aria-hidden>{soundOn ? "🔊" : "🔇"}</span>
           </button>
-          <span className={styles.kbdHint}>
-            <kbd>SPACE</kbd>
-            <span className={styles.kbdLabel}>로 굴리기</span>
-          </span>
+          {isHost && (
+            <span className={styles.kbdHint}>
+              <kbd>SPACE</kbd>
+              <span className={styles.kbdLabel}>로 굴리기</span>
+            </span>
+          )}
         </div>
       </header>
 
@@ -247,6 +438,16 @@ export default function DicePlayPage() {
         <p className={styles.subtitle}>
           <span aria-hidden>{theme.emoji}</span>
           <span>{theme.name}</span>
+          {downgraded && (
+            <span className={styles.kbdLabel} style={{ marginLeft: 12 }}>
+              · 이미 호스트가 있어 관전 모드로 입장했어요
+            </span>
+          )}
+          {!isHost && noHost && (
+            <span className={styles.kbdLabel} style={{ marginLeft: 12 }}>
+              · 호스트 대기중
+            </span>
+          )}
         </p>
       </div>
 
@@ -254,15 +455,9 @@ export default function DicePlayPage() {
         {/* ============ LEFT: DICE STAGE ============ */}
         <section className={styles.leftCol}>
           <div className={styles.diceStage}>
-            <div className={styles.sparkleA} aria-hidden>
-              ✦
-            </div>
-            <div className={styles.sparkleB} aria-hidden>
-              ✦
-            </div>
-            <div className={styles.sparkleC} aria-hidden>
-              ✦
-            </div>
+            <div className={styles.sparkleA} aria-hidden>✦</div>
+            <div className={styles.sparkleB} aria-hidden>✦</div>
+            <div className={styles.sparkleC} aria-hidden>✦</div>
             <div className={styles.diceShadow} aria-hidden />
             <div
               className={`${styles.dice3d} ${
@@ -283,7 +478,7 @@ export default function DicePlayPage() {
             <AnimatePresence mode="wait">
               {result !== null && !rolling && (
                 <motion.div
-                  key={`result-${idRef.current}`}
+                  key={`result-${room?.rollSeq ?? 0}`}
                   className={styles.resultBubble}
                   initial={{ opacity: 0, scale: 0.6, y: 10 }}
                   animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -308,11 +503,17 @@ export default function DicePlayPage() {
               className={styles.rollBtn}
               style={{ background: theme.buttonGradient }}
               onClick={rollDice}
-              disabled={rolling}
+              disabled={!isHost || rolling || hostBusy}
+              aria-disabled={!isHost}
+              title={isHost ? undefined : "호스트만 굴릴 수 있어요"}
             >
               <span className={styles.rollBtnLabel}>
                 <span aria-hidden>🎲</span>
-                {rolling ? "굴리는 중..." : "굴리기"}
+                {!isHost
+                  ? "호스트가 굴립니다"
+                  : rolling
+                    ? "굴리는 중..."
+                    : "굴리기"}
               </span>
             </button>
           </Magnetic>
@@ -340,8 +541,9 @@ export default function DicePlayPage() {
                         "--theme-soft-card": t.softBg,
                       } as React.CSSProperties
                     }
-                    onClick={() => setThemeKey(t.key)}
-                    disabled={rolling}
+                    onClick={() => changeTheme(t.key)}
+                    disabled={!isHost || rolling}
+                    aria-disabled={!isHost}
                   >
                     <span className={styles.themeEmoji} aria-hidden>
                       {t.emoji}
@@ -379,11 +581,11 @@ export default function DicePlayPage() {
                 <h3 className={styles.sectionLabel}>
                   <span aria-hidden>📜</span> 최근 결과
                 </h3>
-                {history.length > 0 && (
+                {isHost && history.length > 0 && (
                   <button
                     type="button"
                     className={styles.resetBtn}
-                    onClick={resetHistory}
+                    onClick={() => setResetConfirmOpen(true)}
                   >
                     초기화
                   </button>
@@ -435,6 +637,33 @@ export default function DicePlayPage() {
           </div>
         </aside>
       </div>
+
+      <ConfirmModal
+        open={resetConfirmOpen}
+        title="히스토리 초기화"
+        message="지금까지 굴린 결과를 모두 지울까요? 모든 관전자 화면에서도 함께 사라져요."
+        confirmLabel="초기화"
+        cancelLabel="취소"
+        onConfirm={async () => {
+          setResetConfirmOpen(false);
+          await resetHistory();
+        }}
+        onCancel={() => setResetConfirmOpen(false)}
+      />
     </div>
+  );
+}
+
+export default function DicePlayPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className={styles.page}>
+          <div className={styles.heroBg} aria-hidden />
+        </div>
+      }
+    >
+      <DicePlayPageInner />
+    </Suspense>
   );
 }

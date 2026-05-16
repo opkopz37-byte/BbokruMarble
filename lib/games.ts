@@ -88,8 +88,10 @@ export const games: Game[] = [
     category: "BOARDGAME",
     accent: "🎲",
     available: true,
-    playHref: "/games/dice/play",
-    playLabel: "주사위 굴리러 가기",
+    playHref: "/games/dice/play?role=host",
+    playLabel: "호스트로 입장",
+    joinHref: "/games/dice/play?role=spectator",
+    joinLabel: "관전으로 입장",
     description:
       "원하는 분위기의 주사위를 골라 굴려보세요. 새벽, 연기, 차분, 촐싹 — 4가지 테마 주사위를 한 페이지에서 모두 즐길 수 있어요.",
     longDescription: [

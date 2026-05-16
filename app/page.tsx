@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { motion } from "motion/react";
 import Magnetic from "@/components/Magnetic";
 import SpotlightOverlay from "@/components/SpotlightOverlay";
@@ -73,13 +72,16 @@ export default function Home() {
                 opacity: { times: [0, 0.4, 1], duration: 1.6 },
               }}
             />
-            <Image
-              src="/hero-on-air.png"
-              alt="On Air — 뽀그네 게임 스튜디오"
-              width={1254}
-              height={1254}
+            <video
+              src="/profile-video.mp4"
+              poster="/hero-on-air.png"
               className={styles.heroImage}
-              priority
+              autoPlay
+              muted
+              loop
+              playsInline
+              preload="auto"
+              aria-label="On Air — 뽀그네 게임 스튜디오"
             />
             {/* 이미지 위로 살짝 떨리는 캔들 글로우 */}
             <motion.div
